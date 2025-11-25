@@ -2,5 +2,6 @@ yield_env/
 __pycache__/
 .DS_Store
 .vscode/
-*.pkl
-*.csv
+# *.pkl
+# *.csv
+yield_prediction_model.pkl
