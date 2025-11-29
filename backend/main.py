@@ -196,7 +196,7 @@ import os
 # --- CONFIGURATION ---
 
 # PASTE YOUR API KEY HERE
-GEMINI_API_KEY = "AIzaSyBAkl78hjU33Xx3gQHfqsBPQK-mx3b6JPs" 
+GEMINI_API_KEY = "" 
 
 # Configure the AI
 genai.configure(api_key=GEMINI_API_KEY)
