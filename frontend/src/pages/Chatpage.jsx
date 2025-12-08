@@ -31,7 +31,7 @@ const ChatPage = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post("http://localhost:8000/chat", { message: input });
+      const response = await axios.post("https://leafcompass.onrender.com/chat", { message: input });
       const botMessage = { text: response.data.response, sender: "bot" };
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {

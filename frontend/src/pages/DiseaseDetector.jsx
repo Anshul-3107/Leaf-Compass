@@ -23,7 +23,7 @@ const DiseasePredictor = () => {
     formData.append("file", selectedFile);
 
     try {
-      const response = await axios.post("http://localhost:8000/predict-disease", formData, {
+      const response = await axios.post("https://leafcompass.onrender.com/predict-disease", formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
       setResult(response.data);

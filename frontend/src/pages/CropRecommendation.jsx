@@ -39,7 +39,7 @@ const CropRecommendation = () => {
     setResult(null);
 
     try {
-      const response = await axios.post("http://localhost:8000/recommend-crop", formData);
+      const response = await axios.post("https://leafcompass.onrender.com/recommend-crop", formData);
       setResult(response.data.recommended_crop);
     } catch (error) {
       console.error("Error:", error);

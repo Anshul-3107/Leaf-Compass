@@ -31,7 +31,7 @@ const YieldPredictor = () => {
     setPrediction(null);
     
     try {
-      const response = await axios.post("http://localhost:8000/predict-yield", formData);
+      const response = await axios.post("https://leafcompass.onrender.com/predict-yield", formData);
       setPrediction(response.data.predicted_yield);
     } catch (error) {
       console.error(error);

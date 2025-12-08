@@ -34,7 +34,7 @@ const FertilizerRecommendation = () => {
     setResult(null);
 
     try {
-      const response = await axios.post("http://localhost:8000/recommend-fertilizer", formData);
+      const response = await axios.post("https://leafcompass.onrender.com/recommend-fertilizer", formData);
       setResult(response.data.recommended_fertilizer);
     } catch (error) {
       console.error("Error:", error);
