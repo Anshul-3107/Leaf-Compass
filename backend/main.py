@@ -13,9 +13,22 @@ from pydantic import BaseModel
 app = FastAPI()
 
 # Allow React to access this API (CORS)
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
+
+origins = [
+    "http://localhost:3000",
+    "https://LeafCompass.onrender.com" # You will get this URL later
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins, # Use the list instead of ["*"] for better security
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -196,7 +209,7 @@ import os
 # --- CONFIGURATION ---
 
 # PASTE YOUR API KEY HERE
-GEMINI_API_KEY = "" 
+GEMINI_API_KEY = "AIzaSyBAkl78hjU33Xx3gQHfqsBPQK-mx3b6JPs"
 
 # Configure the AI
 genai.configure(api_key=GEMINI_API_KEY)
