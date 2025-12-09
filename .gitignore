@@ -8,3 +8,4 @@ yield_prediction_model.pkl
 Fertilizer.csv
 cleaned_fertilizer_data.csv
 plant_disease_prediction_model.h5
+.env
