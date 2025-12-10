@@ -1,6 +1,8 @@
 
 # 🌿 LeafCompass - Smart Farming AI
 
+![Logo](./frontend/src/assets/logo2.png)
+
 [LeafCompass](https://leafcompass.vercel.app/) is an intelligent agricultural assistant designed to empower farmers with data-driven insights. It leverages Machine Learning and Generative AI to diagnose plant diseases, recommend crops, predict yields, and provide real-time farming advice via a chatbot.
 
 🚀 Live Demo
@@ -178,6 +180,3 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 Made with 💚 for the Farming Community.
 
-
-## 🔗 Links
-[![portfolio](https://img.shields.io/badge/my_portfolio-000?style=for-the-badge&logo=ko-fi&logoColor=white)](https://katherineoelsner.com/)
