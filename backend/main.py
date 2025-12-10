@@ -5,13 +5,13 @@ import joblib
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-import google.generativeai as genai
 from io import BytesIO
 from PIL import Image
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
+from huggingface_hub import InferenceClient
 
 # --- CONFIGURATION & SETUP ---
 load_dotenv() # Loads environment variables from .env file
@@ -75,35 +75,37 @@ except Exception as e:
     print(f"❌ Error loading fertilizer model: {e}")
 
 # 5. Configure Gemini AI
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-    try:
-        # Using standard flash model
-        model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash", 
-            system_instruction="""
-            You are AgroBot, an intelligent agricultural assistant integrated into the 'AgroAI' web application.
-            Your capabilities:
-            1. Diagnose plant diseases based on symptoms described by the user.
-            2. Explain crop yield predictions.
-            3. Recommend fertilizers for specific soil types.
-            4. Suggest crops based on NPK values and climate.
-            Guidelines:
-            - Keep answers concise (under 3-4 sentences).
-            - Use emojis (🌾, 🚜, 🍃).
-            - If asked about app features, guide them: Disease -> 'Disease' tab, Yield -> 'Yield' tab.
-            """
-        )
-        chat_session = model.start_chat(history=[])
-        print("✅ Gemini AI Connected.")
-    except Exception as e:
-        print(f"❌ Error configuring Gemini: {e}")
-        chat_session = None
-else:
-    print("⚠️  Warning: GEMINI_API_KEY not found in .env file.")
-    chat_session = None
+client = InferenceClient(model="deepseek-ai/DeepSeek-V3.2", token=os.getenv("API"))
+# GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+# if GEMINI_API_KEY:
+#     genai.configure(api_key=GEMINI_API_KEY)
+#     try:
+#         # Using standard flash model
+#         model = genai.GenerativeModel(
+#             model_name="gemini-1.5-flash", 
+#             system_instruction="""
+#             You are AgroBot, an intelligent agricultural assistant integrated into the 'AgroAI' web application.
+#             Your capabilities:
+#             1. Diagnose plant diseases based on symptoms described by the user.
+#             2. Explain crop yield predictions.
+#             3. Recommend fertilizers for specific soil types.
+#             4. Suggest crops based on NPK values and climate.
+#             Guidelines:
+#             - Keep answers concise (under 3-4 sentences).
+#             - Use emojis (🌾, 🚜, 🍃).
+#             - If asked about app features, guide them: Disease -> 'Disease' tab, Yield -> 'Yield' tab.
+#             """
+#         )
+#         chat_session = model.start_chat(history=[])
+#         print("✅ Gemini AI Connected.")
+#     except Exception as e:
+#         print(f"❌ Error configuring Gemini: {e}")
+#         chat_session = None
+# else:
+#     print("⚠️  Warning: GEMINI_API_KEY not found in .env file.")
+#     chat_session = None
 
 
 # --- DATA STRUCTURES (Pydantic Models) ---
@@ -221,15 +223,37 @@ def recommend_fertilizer(data: FertilizerInput):
 
 @app.post("/chat")
 def chat_endpoint(data: ChatInput):
-    if not chat_session:
-        return {"response": "AI service is currently unavailable. Check API Key."}
-    
     try:
-        response = chat_session.send_message(data.message)
-        return {"response": response.text}
-    except Exception as e:
-        print(f"Gemini Error: {e}")
-        return {"response": "I'm having trouble connecting to the network. 📡 Try again later!"}
+        # Create the message structure required by the "conversational" task
+        messages = [
+            {"role": "system", "content": '''You are AgroBot, an intelligent agricultural assistant integrated into the 'AgroAI' web application.
+            Your capabilities:
+            1. Diagnose plant diseases based on symptoms described by the user.
+            2. Explain crop yield predictions.
+            3. Recommend fertilizers for specific soil types.
+            4. Suggest crops based on NPK values and climate.
+            Guidelines:
+            - Keep answers concise (under 3-4 sentences).
+            - Use emojis (🌾, 🚜, 🍃).
+            - If asked about app features, guide them: Disease -> 'Disease' tab, Yield -> 'Yield' tab.
+            '''},
+            {"role": "user", "content": data.message}
+        ]
 
+        # Use chat_completion instead of text_generation
+        response = client.chat_completion(
+            messages, 
+            max_tokens=200
+        )
+
+        # Extract the actual text from the response object
+        bot_reply = response.choices[0].message.content
+        
+        return {"response": bot_reply}
+
+    except Exception as e:
+        print(f"Chat Error: {e}")
+        return {"response": "I'm having trouble connecting to the satellite. 📡 Please try again later!"}
+    
 if __name__ == "__main__":
     uvicorn.run(app, host="localhost", port=8000)
