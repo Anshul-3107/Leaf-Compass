@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'https://jain-mayukh-lc-api.hf.space', // Matches your FastAPI port
+  baseURL: 'http://localhost:8000/', // Matches your FastAPI port
 });
 
 export const checkServer = () => API.get('/');
