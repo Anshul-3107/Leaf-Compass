@@ -84,7 +84,7 @@ client = InferenceClient(model="deepseek-ai/DeepSeek-V3.2", token=os.getenv("API
 #     try:
 #         # Using standard flash model
 #         model = genai.GenerativeModel(
-#             model_name="gemini-1.5-flash", 
+#             model_name="gemini-1.5-flash-lite", 
 #             system_instruction="""
 #             You are AgroBot, an intelligent agricultural assistant integrated into the 'AgroAI' web application.
 #             Your capabilities:
