@@ -1,182 +1,349 @@
+<div align="center">
 
-# 🌿 LeafCompass - Smart Farming AI
+<img src="./frontend/src/assets/logo2.png" alt="LeafCompass Logo" width="120"/>
 
-![Logo](./frontend/src/assets/logo2.png)
+# 🌿 LeafCompass
 
-[LeafCompass](https://leafcompass.vercel.app/) is an intelligent agricultural assistant designed to empower farmers with data-driven insights. It leverages Machine Learning and Generative AI to diagnose plant diseases, recommend crops, predict yields, and provide real-time farming advice via a chatbot.
+### Smart Farming, Powered by AI
 
-🚀 Live Demo
-- Frontend (Vercel): https://leafcompass.vercel.app/ 
+**LeafCompass** is an intelligent agricultural assistant that empowers farmers with data-driven insights — diagnose plant diseases, predict crop yields, get tailored recommendations, and chat with an AI agronomist. All in one platform.
 
-- Backend API (Hugging Face): https://jain-mayukh-lc-api.hf.space/docs 
-## ✨ Key Features
-#### 🍂 Plant Disease Detection
-- Input: Upload an image of a crop leaf.
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://leafcompass.vercel.app/)
+[![Backend API](https://img.shields.io/badge/Backend%20API-HuggingFace-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black)](https://jain-mayukh-lc-api.hf.space/docs)
+[![Flutter](https://img.shields.io/badge/Flutter-Mobile-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](./LICENSE)
 
-- Model: Convolutional Neural Network (CNN) built with TensorFlow/Keras.
+</div>
 
-- Output: Identifies the disease name and confidence level.
+---
 
-#### 🌾 Crop Yield Prediction
-- Input: Rainfall, Temperature, Soil Type, Region, Weather, etc.
+## 🔗 Live Links
 
-- Model: Random Forest Regressor (Scikit-Learn).
+| Platform | URL |
+|---|---|
+| 🌐 Web App (Vercel) | https://leafcompass.vercel.app/ |
 
-- Output: Predicted yield in kg/ha.
+---
 
-#### 🌱 Crop Recommendation
-- Input: Soil N-P-K values, pH, Humidity, Rainfall, State.
+## 📖 Table of Contents
 
-- Model: Random Forest Classifier.
+- [Overview](#-overview)
+- [Features](#-features)
+- [Tech Stack](#️-tech-stack)
+- [Architecture](#️-architecture)
+- [Project Structure](#-project-structure)
+- [Local Setup](#️-local-setup)
+- [AI Models](#-ai-models)
+- [API Reference](#-api-reference)
+- [Environment Variables](#-environment-variables)
+- [Deployment](#-deployment)
+- [Contributing](#-contributing)
+- [License](#-license)
 
-- Output: The most suitable crop for the given conditions.
+---
 
-#### 🧪 Fertilizer Recommendation
-- Input: Soil stats, Crop type, Moisture.
+## 🌱 Overview
 
-- Model: Classification Model.
+LeafCompass bridges the gap between modern AI and everyday farming. Whether you're a farmer in the field or an agronomist in the lab, LeafCompass delivers instant, accurate, ML-powered insights through:
 
-- Output: Recommended fertilizer type.
+- A **React web app** deployed on Vercel
+- A **Flutter mobile app** for Android/iOS
+- A **FastAPI backend** hosted on Hugging Face Spaces (Dockerized)
 
-#### 🤖 AgroBot (AI Chat)
-- Engine: deepseek-ai/DeepSeek-V3.2 (via Hugging Face Inference API).
+---
 
-- Function: Answers general farming questions in real-time.
+## ✨ Features
+
+### 🍂 Plant Disease Detection
+- **Input:** Upload a crop leaf image
+- **Model:** Custom CNN built with TensorFlow/Keras
+- **Output:** Disease name + confidence score
+
+### 🌾 Crop Yield Prediction
+- **Input:** Rainfall, Temperature, Soil Type, Region, Weather Condition, etc.
+- **Model:** Random Forest Regressor (Scikit-Learn)
+- **Output:** Predicted yield in kg/ha
+
+### 🌱 Crop Recommendation
+- **Input:** Soil N-P-K values, pH, Humidity, Rainfall, State
+- **Model:** Random Forest Classifier
+- **Output:** Most suitable crop for your conditions
+
+### 🧪 Fertilizer Recommendation
+- **Input:** Soil stats, Crop type, Moisture levels
+- **Model:** XGBoost / Random Forest Classifier
+- **Output:** Recommended fertilizer type
+
+### 🤖 AgroBot (AI Chat)
+- **Engine:** `deepseek-ai/DeepSeek-V3.2` via Hugging Face Inference API
+- **Function:** Answers real-time farming questions in plain language
+
+---
 
 ## 🛠️ Tech Stack
-#### Frontend
-- Framework: React.js
-- Styling: Tailwind CSS
-- Icons: Lucide React
-- Routing: React Router DOM
-- HTTP Client: Axios
 
-#### Backend
-- Framework: FastAPI (Python)
-- ML Libraries: TensorFlow, Scikit-learn, Pandas, NumPy
-- AI Integration: Hugging Face Inference Client (huggingface_hub)
-- Deployment: Docker (Hugging Face Spaces)
+### Web Frontend (React)
+| Tool | Purpose |
+|---|---|
+| React.js | UI framework |
+| Tailwind CSS | Styling |
+| Lucide React | Icons |
+| React Router DOM | Client-side routing |
+| Axios | HTTP client |
 
-## ⚙️ Local Installation & Setup
-Follow these steps to run the project locally on your machine.
+### Mobile Frontend (Flutter)
+| Tool | Purpose |
+|---|---|
+| Flutter 3.x + Material 3 | UI framework |
+| go_router | Declarative navigation |
+| google_fonts | Inter typeface |
+| flutter_animate | Micro-animations |
+| image_picker | Camera & gallery access |
 
-#### Prerequisites
-- Node.js & npm installed.
-- Python 3.9+ installed.
-- Git installed.
-1 . Clone the Repository
+### Backend (Python / FastAPI)
+| Tool | Purpose |
+|---|---|
+| FastAPI + Uvicorn | High-performance async API |
+| TensorFlow / Keras | Plant disease CNN |
+| Scikit-learn / Joblib | Yield, Crop & Fertilizer models |
+| Pandas / NumPy | Data processing |
+| Hugging Face `InferenceClient` | DeepSeek V3.2 chat |
+| Pillow | Server-side image preprocessing |
+| Docker | Containerised deployment on HF Spaces |
+
+---
+
+## 🏗️ Architecture
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                      Client Layer                        │
+│  ┌─────────────────────┐   ┌──────────────────────────┐  │
+│  │  React Web App      │   │  Flutter Mobile App      │  │
+│  │  (Vercel)           │   │  (Android / iOS)         │  │
+│  └──────────┬──────────┘   └───────────┬──────────────┘  │
+└─────────────┼────────────────────────────┼───────────────┘
+              │           REST API          │
+              ▼                             ▼
+┌──────────────────────────────────────────────────────────┐
+│          FastAPI Backend (Hugging Face Spaces)           │
+│  ┌────────────┐  ┌──────────────────┐  ┌──────────────┐  │
+│  │ TensorFlow │  │  scikit-learn /  │  │ HuggingFace  │  │
+│  │  Disease   │  │  XGBoost Models  │  │ DeepSeek V3  │  │
+│  │    CNN     │  │ Yield/Crop/Fert. │  │  (AgroBot)   │  │
+│  └────────────┘  └──────────────────┘  └──────────────┘  │
+└──────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 📁 Project Structure
+
+```
+Leaf-Compass/
+├── backend/
+│   ├── main.py                  # FastAPI entry point & all endpoints
+│   ├── requirements.txt         # Python dependencies
+│   ├── Dockerfile               # Docker config for Hugging Face Spaces
+│   ├── README.md                # Backend-specific notes
+│   └── models/                  # Trained ML model files
+│       ├── plant_disease_prediction_model.h5
+│       ├── class_indices.json
+│       ├── yield_prediction_model.pkl
+│       ├── crop_recommendation_model.pkl
+│       └── fertilizer_recommendation_model.pkl
+│
+├── frontend/                    # React web application
+│   ├── src/
+│   │   ├── components/          # Reusable UI (Header, Footer, Forms)
+│   │   ├── pages/               # Page views (Home, Disease, Yield, etc.)
+│   │   ├── services/            # API.js — Axios configuration
+│   │   ├── assets/              # Images, icons, logo
+│   │   └── App.js               # Main router
+│   ├── tailwind.config.js
+│   └── package.json
+│
+├── flutter_frontend/            # Flutter mobile application
+│   ├── lib/
+│   │   ├── main.dart            # App entry, theme & routing
+│   │   ├── screens/
+│   │   │   ├── home_screen.dart
+│   │   │   ├── disease_screen.dart
+│   │   │   ├── yield_screen.dart
+│   │   │   ├── crop_screen.dart
+│   │   │   ├── fertilizer_screen.dart
+│   │   │   └── chat_screen.dart
+│   │   ├── services/
+│   │   │   └── api_service.dart
+│   │   └── models/
+│   │       └── chat_message.dart
+│   └── android/
+│
+└── model training/              # Jupyter notebooks & training scripts
+    ├── Crop_Disease_Detection/
+    ├── Crop_prediction_model/
+    ├── Fertilizer_recommendation/
+    └── Yield_prediction_Model/
+```
+
+---
+
+## ⚙️ Local Setup
+
+### Prerequisites
+
+| Tool | Version |
+|---|---|
+| Node.js & npm | ≥ 18 |
+| Python | ≥ 3.9 |
+| Flutter SDK | ≥ 3.0 |
+| Git | Latest |
+
+---
+
+### Step 1 — Clone the Repository
+
 ```bash
 git clone https://github.com/your-username/leaf-compass.git
 cd leaf-compass
 ```
 
-2 . Backend Setup
+---
 
-The backend handles the ML models. Note that you will have to download the large model files from Google Drive.
+### Step 2 — Backend Setup
 
-```Bash
-
-# Navigate to backend folder
+```bash
 cd backend
 
-# Create a virtual environment (Optional but recommended)
+# Create and activate a virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install Python dependencies
-pip install -r requirements.txt
-
-# Run the Server
-python main.py
-```
-The server will start at `http://localhost:8000`.
-
-3 . Frontend Setup
-
-Open a new terminal for the frontend.
-
-```Bash
-
-# Navigate to frontend folder
-cd frontend
+source venv/bin/activate        # Windows: venv\Scripts\activate
 
 # Install dependencies
-npm install
+pip install -r requirements.txt
 
-# Start the React App
+# Add your Hugging Face token to a .env file
+echo "API=hf_your_token_here" > .env
+
+# Start the server
+python main.py
+```
+
+> Server runs at `http://localhost:8000` — visit `/docs` for the Swagger UI.
+
+---
+
+### Step 3 — Web Frontend Setup
+
+Open a new terminal:
+
+```bash
+cd frontend
+
+npm install
 npm start
 ```
-The app will open at `http://localhost:3000`.
 
-## 📂 Project Structure
+> App opens at `http://localhost:3000`.
+
+---
+
+### Step 4 — Flutter App Setup (Optional)
+
 ```bash
-leaf-compass/
-├── backend/
-│   ├── models/                # ML Models (.h5, .pkl) - Auto-downloaded
-│   ├── main.py                # FastAPI entry point & endpoints
-│   ├── requirements.txt       # Python dependencies
-│   ├── Dockerfile             # Docker config for Hugging Face
-│   └── README.md              # Backend specific info
-├── frontend/
-│   ├── src/
-│   │   ├── components/        # Reusable UI (Header, Footer, Forms)
-│   │   ├── pages/             # Page Views (Home, Disease, Yield, etc.)
-│   │   ├── services/          # API.js (Axios configuration)
-│   │   └── App.js             # Main Router
-│   ├── tailwind.config.js     # Tailwind settings
-│   └── package.json           # Node dependencies
-└── README.md                  # Main documentation
+cd flutter_frontend
+
+flutter pub get
+
+# For Android emulator, set base URL to http://10.0.2.2:8000
+# in lib/services/api_service.dart
+
+flutter run
 ```
 
-## 🧠 Model Details
-| Feature | Algorithm | Input Data | Accuracy (Approx) |
-| :-------- | :------- | :-------- | :---- | 
-| Disease Detection	| CNN (MobileNetV2/Custom) | Leaf Images (224x224) | ~92% |
-|Yield Prediction | Random Forest Regressor | Weather & Soil Data | ~88% (R2 Score)|
-|Crop Recommender | Random Forest Classifier | NPK, pH, Rainfall | ~99% |
-|Fertilizer Recommender | XGBoost/Random Forest	| Soil & Crop Data | ~95% |
+---
+
+## 🧠 AI Models
+
+| Feature | Algorithm | Input | Accuracy |
+|---|---|---|---|
+| 🍂 Disease Detection | CNN (TensorFlow/Keras) | Leaf image 224×224 | ~92% |
+| 🌾 Yield Prediction | Random Forest Regressor | Weather & soil data | ~88% R² |
+| 🌱 Crop Recommendation | Random Forest Classifier | NPK, pH, rainfall | ~99% |
+| 🧪 Fertilizer Recommendation | XGBoost / Random Forest | Soil & crop data | ~95% |
+| 🤖 AgroBot | DeepSeek-V3.2 (HF API) | Natural language | — |
+
+Training notebooks for all models are in the `model training/` directory.
+
+---
+
+## 📡 API Reference
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/` | Health check |
+| `POST` | `/predict-disease` | Leaf image upload → disease + confidence |
+| `POST` | `/predict-yield` | Weather/soil JSON → yield in kg/ha |
+| `POST` | `/recommend-crop` | NPK/pH/climate JSON → recommended crop |
+| `POST` | `/recommend-fertilizer` | Soil/crop JSON → recommended fertilizer |
+| `POST` | `/chat` | `{ "message": "..." }` → AgroBot reply |
+
+> Full interactive docs: **https://jain-mayukh-lc-api.hf.space/docs**
+
+---
 
 ## 🔑 Environment Variables
-This project requires a Hugging Face Token for the AI Chatbot.
 
-1 . Locally: You can add HUGGING_FACE_TOKEN in a .env file or hardcode it in main.py (not recommended for public repos).
+Create a `.env` file inside the `backend/` directory:
 
-2 . Hugging Face Spaces: Set it in the "Settings" -> "Variables and secrets" tab.
+```env
+# Hugging Face API token for DeepSeek V3.2 (AgroBot)
+API=hf_your_hugging_face_token_here
+```
 
-## 🚀 Deployment Guide
-#### Backend (Hugging Face Spaces)
-The backend is Dockerized to handle large dependencies.
+For **Hugging Face Spaces** deployment, set this in:
+`Settings → Variables and Secrets`
 
-- Create a Space on Hugging Face (SDK: Docker).
+---
 
-- Enable Git LFS if pushing models directly (or use the Google Drive downloader script provided in main.py).
+## 🚀 Deployment
 
-- Push the backend folder contents to the Space.
+### Backend — Hugging Face Spaces (Docker)
 
-#### Frontend (Vercel)
-- Push the frontend folder to GitHub.
+1. Create a new Space on [Hugging Face](https://huggingface.co/spaces) with **SDK: Docker**
+2. Push the contents of the `backend/` folder to the Space repo
+3. Add your `API` token under **Settings → Variables and Secrets**
+4. The Space will auto-build and deploy via the `Dockerfile`
 
-- Import the repo into Vercel.
+### Web Frontend — Vercel
 
-- Set the Root Directory to frontend.
+1. Push the `frontend/` folder to a GitHub repository
+2. Import the repo into [Vercel](https://vercel.com)
+3. Set the **Root Directory** to `frontend`
+4. Click **Deploy** ✅
 
-- Deploy!
+---
 
 ## 🤝 Contributing
+
 Contributions are welcome! Please follow these steps:
 
-1 . Fork the repository.
+1. **Fork** the repository
+2. **Create** a feature branch: `git checkout -b feature/your-feature`
+3. **Commit** your changes: `git commit -m 'feat: describe your change'`
+4. **Push** to the branch: `git push origin feature/your-feature`
+5. **Open** a Pull Request
 
-2 . Create a new branch (git checkout -b feature-branch).
-
-3 . Commit your changes.
-
-4 . Push to the branch.
-
-5 . Open a Pull Request.
+---
 
 ## 📄 License
-This project is licensed under the MIT License - see the LICENSE file for details.
 
-Made with 💚 for the Farming Community.
+This project is licensed under the **MIT License** — see the [LICENSE](./LICENSE) file for details.
 
+---
+
+<div align="center">
+
+Made with 💚 for the Farming Community
+
+</div>
