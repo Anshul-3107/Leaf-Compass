@@ -17,13 +17,7 @@
 
 ---
 
-## 🔗 Live Links
 
-| Platform | URL |
-|---|---|
-| 🌐 Web App (Vercel) | https://leafcompass.vercel.app/ |
-
----
 
 ## 📖 Table of Contents
 
