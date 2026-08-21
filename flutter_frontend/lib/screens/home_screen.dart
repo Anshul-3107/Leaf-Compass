@@ -79,7 +79,7 @@ class HomeScreen extends StatelessWidget {
         slivers: [
           // ── Hero SliverAppBar ──────────────────────────────────────────
           SliverAppBar(
-            expandedHeight: 240,
+            expandedHeight: 290,
             floating: false,
             pinned: true,
             backgroundColor: kAgriGreen,
@@ -139,21 +139,27 @@ class HomeScreen extends StatelessWidget {
                       style: GoogleFonts.inter(
                           fontSize: 18, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 12),
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _features.length,
-                    gridDelegate:
-                        const SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: 260,
-                      childAspectRatio: 0.85,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                    ),
-                    itemBuilder: (ctx, i) => _FeatureCard(
-                      feature: _features[i],
-                      index: i,
-                    ),
+                  LayoutBuilder(
+                    builder: (ctx, constraints) {
+                      final width = constraints.maxWidth;
+                      // Use 2 columns on phones, 3 on wider screens
+                      final cols = width > 500 ? 3 : 2;
+                      return GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _features.length,
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: cols,
+                          childAspectRatio: 0.75,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                        ),
+                        itemBuilder: (ctx, i) => _FeatureCard(
+                          feature: _features[i],
+                          index: i,
+                        ),
+                      );
+                    },
                   ),
 
                   // ── Footer ─────────────────────────────────────────────
@@ -183,30 +189,33 @@ class _HeroSection extends StatelessWidget {
       ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 48, 20, 20),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 'Welcome to LeafCompass',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
                   color: Colors.white,
-                  fontSize: 26,
+                  fontSize: 22,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.5,
                 ),
               ).animate().fadeIn(delay: 100.ms),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(
                 'Your all-in-one smart farming companion.\nDiagnose crops, predict yields & get expert advice.',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(
-                    color: Colors.green[100], fontSize: 13, height: 1.5),
+                    color: Colors.green[100], fontSize: 12, height: 1.4),
               ).animate().fadeIn(delay: 200.ms),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              const SizedBox(height: 12),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 12,
+                runSpacing: 8,
                 children: [
                   _HeroButton(
                     label: 'Diagnose Now',
@@ -214,7 +223,6 @@ class _HeroSection extends StatelessWidget {
                     path: '/disease',
                     isPrimary: true,
                   ),
-                  const SizedBox(width: 12),
                   _HeroButton(
                     label: 'Ask AI',
                     icon: Icons.smart_toy,
@@ -494,47 +502,51 @@ class _FeatureCard extends StatelessWidget {
       child: Card(
         elevation: 2,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            // MainAxisSize.max fills the GridView tile height
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
                   color: feature['color'] as Color,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   feature['icon'] as IconData,
                   color: feature['iconColor'] as Color,
-                  size: 22,
+                  size: 20,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               Text(
                 feature['title'] as String,
                 style: GoogleFonts.inter(
-                    fontSize: 15, fontWeight: FontWeight.w700),
+                    fontSize: 13, fontWeight: FontWeight.w700),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Expanded(
                 child: Text(
                   feature['desc'] as String,
                   style: GoogleFonts.inter(
-                      fontSize: 12, color: Colors.grey[600], height: 1.4),
+                      fontSize: 11, color: Colors.grey[600], height: 1.4),
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const SizedBox(height: 8),
               Row(
                 children: [
                   Text('Try Tool',
                       style: GoogleFonts.inter(
                           color: kAgriGreen,
                           fontWeight: FontWeight.w600,
-                          fontSize: 13)),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.arrow_forward, size: 14, color: kAgriGreen),
+                          fontSize: 11)),
+                  const SizedBox(width: 3),
+                  const Icon(Icons.arrow_forward, size: 11, color: kAgriGreen),
                 ],
               ),
             ],
@@ -567,8 +579,11 @@ class _FooterSection extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -585,6 +600,7 @@ class _FooterSection extends StatelessWidget {
                 ],
               ),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
                     icon: const Icon(Icons.code, color: Colors.grey),
@@ -608,14 +624,15 @@ class _FooterSection extends StatelessWidget {
           const SizedBox(height: 12),
           const Divider(color: Color(0xFF374151)),
           const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text('Made with ',
                   style:
                       GoogleFonts.inter(color: Colors.grey[400], fontSize: 12)),
               const Icon(Icons.favorite, color: Colors.red, size: 14),
-              Text(' for the farming community. © ${DateTime.now().year} | Mayukh Jain',
+              Text(' for farmers. © ${DateTime.now().year} | Mayukh Jain',
                   style:
                       GoogleFonts.inter(color: Colors.grey[400], fontSize: 12)),
             ],

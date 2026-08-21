@@ -4,7 +4,6 @@ import uvicorn
 import joblib
 import numpy as np
 import pandas as pd
-import tensorflow as tf
 from io import BytesIO
 from PIL import Image
 from fastapi import FastAPI, File, UploadFile
@@ -12,6 +11,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from huggingface_hub import InferenceClient
+
+# TensorFlow is optional — only available on Python <= 3.12
+try:
+    import tensorflow as tf
+    TF_AVAILABLE = True
+except ModuleNotFoundError:
+    tf = None
+    TF_AVAILABLE = False
+    print("⚠️  TensorFlow not available (requires Python ≤ 3.12). Disease detection disabled.")
 
 # --- CONFIGURATION & SETUP ---
 load_dotenv() # Loads environment variables from .env file
@@ -44,12 +52,14 @@ class_names = {}
 
 # 1. Load Plant Disease Model
 try:
-    disease_model = tf.keras.models.load_model("./models/plant_disease_prediction_model.h5")
-    with open("./models/class_indices.json", "r") as f:
-        class_indices = json.load(f)
-    # Map indices to names
-    class_names = {int(k): v for k, v in class_indices.items()}
-    print("✅ Disease Model Loaded.")
+    if TF_AVAILABLE:
+        disease_model = tf.keras.models.load_model("./models/plant_disease_prediction_model.h5")
+        with open("./models/class_indices.json", "r") as f:
+            class_indices = json.load(f)
+        class_names = {int(k): v for k, v in class_indices.items()}
+        print("✅ Disease Model Loaded.")
+    else:
+        print("⚠️  Skipping disease model — TensorFlow not installed.")
 except Exception as e:
     print(f"❌ Error loading disease model: {e}")
 
