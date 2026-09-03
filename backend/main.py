@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 from huggingface_hub import InferenceClient
 
-# TensorFlow is optional — only available on Python <= 3.12
+# TensorFlow is optional
 try:
     import tensorflow as tf
     TF_AVAILABLE = True
