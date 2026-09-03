@@ -60,6 +60,13 @@ try:
         print("✅ Disease Model Loaded.")
     else:
         print("⚠️  Skipping disease model — TensorFlow not installed.")
+except FileNotFoundError:
+    print(
+        "❌ plant_disease_prediction_model.h5 not found in ./models/. "
+        "This file is not committed to git due to its size. "
+        "Download it from: <YOUR_MODEL_HOST_URL>/plant_disease_prediction_model.h5 "
+        "and place it in backend/models/ before starting the server."
+    )
 except Exception as e:
     print(f"❌ Error loading disease model: {e}")
 
@@ -67,6 +74,13 @@ except Exception as e:
 try:
     yield_model = joblib.load("./models/yield_prediction_model.pkl")
     print("✅ Yield Model Loaded.")
+except FileNotFoundError:
+    print(
+        "❌ yield_prediction_model.pkl not found in ./models/. "
+        "This file is not committed to git due to its size. "
+        "Download it from: <YOUR_MODEL_HOST_URL>/yield_prediction_model.pkl "
+        "and place it in backend/models/ before starting the server."
+    )
 except Exception as e:
     print(f"❌ Error loading yield model: {e}")
 

@@ -5,13 +5,30 @@ import 'dart:io';
 
 /// Central API service — mirrors frontend/src/services/api.js
 ///
-/// Base URL note:
-///   Android emulator → http://10.0.2.2:8000
-///   iOS simulator    → http://localhost:8000
-///   Physical device  → http://[your-machine-IP]:8000
+/// Base URL is configured at build/run time via --dart-define:
+///
+///   Android emulator (default, no flag needed):
+///     flutter run
+///
+///   Physical device (replace with your machine's LAN IP):
+///     flutter run --dart-define=API_BASE_URL=http://192.168.x.x:8000
+///
+///   Web (local dev):
+///     flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8000
+///
+///   Release build pointing at Render backend:
+///     flutter build apk  --dart-define=API_BASE_URL=https://LeafCompass.onrender.com
+///     flutter build web  --dart-define=API_BASE_URL=https://LeafCompass.onrender.com
+///
+///   iOS simulator:
+///     flutter run --dart-define=API_BASE_URL=http://localhost:8000
 class ApiService {
-  // Change this to your machine's local IP when testing on a physical device.
-  static const String baseUrl = 'http://10.0.2.2:8000';
+  /// Resolved at compile time from --dart-define=API_BASE_URL=...
+  /// Falls back to the Android-emulator loopback alias when no flag is supplied.
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://10.0.2.2:8000',
+  );
 
   static final Dio _dio = Dio(
     BaseOptions(
