@@ -11,3 +11,4 @@ Fertilizer.csv
 cleaned_fertilizer_data.csv
 plant_disease_prediction_model.h5
 .env
+.idea/
