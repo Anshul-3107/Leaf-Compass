@@ -27,9 +27,13 @@ load_dotenv() # Loads environment variables from .env file
 app = FastAPI()
 
 # CORS Setup
+# NOTE: Render service slugs are always lowercase — update the URL below
+# to match your exact Render service name if it differs.
+# The HuggingFace Spaces URL is https://jain-mayukh-lc-api.hf.space
 origins = [
     "http://localhost:3000",
-    "https://LeafCompass.onrender.com"
+    "https://leafcompass.onrender.com",       # Render (lowercase slug)
+    "https://jain-mayukh-lc-api.hf.space",   # Hugging Face Spaces
 ]
 
 app.add_middleware(
@@ -64,8 +68,8 @@ except FileNotFoundError:
     print(
         "❌ plant_disease_prediction_model.h5 not found in ./models/. "
         "This file is not committed to git due to its size. "
-        "Download it from: <YOUR_MODEL_HOST_URL>/plant_disease_prediction_model.h5 "
-        "and place it in backend/models/ before starting the server."
+        "TODO: replace with your actual model hosting URL — "
+        "download and place it in backend/models/ before starting the server."
     )
 except Exception as e:
     print(f"❌ Error loading disease model: {e}")
@@ -78,8 +82,8 @@ except FileNotFoundError:
     print(
         "❌ yield_prediction_model.pkl not found in ./models/. "
         "This file is not committed to git due to its size. "
-        "Download it from: <YOUR_MODEL_HOST_URL>/yield_prediction_model.pkl "
-        "and place it in backend/models/ before starting the server."
+        "TODO: replace with your actual model hosting URL — "
+        "download and place it in backend/models/ before starting the server."
     )
 except Exception as e:
     print(f"❌ Error loading yield model: {e}")
@@ -98,38 +102,8 @@ try:
 except Exception as e:
     print(f"❌ Error loading fertilizer model: {e}")
 
-# 5. Configure Gemini AI
-
+# 5. Configure DeepSeek AI via Hugging Face Inference API
 client = InferenceClient(model="deepseek-ai/DeepSeek-V3.2", token=os.getenv("API"))
-# GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
-# if GEMINI_API_KEY:
-#     genai.configure(api_key=GEMINI_API_KEY)
-#     try:
-#         # Using standard flash model
-#         model = genai.GenerativeModel(
-#             model_name="gemini-1.5-flash-lite", 
-#             system_instruction="""
-#             You are AgroBot, an intelligent agricultural assistant integrated into the 'AgroAI' web application.
-#             Your capabilities:
-#             1. Diagnose plant diseases based on symptoms described by the user.
-#             2. Explain crop yield predictions.
-#             3. Recommend fertilizers for specific soil types.
-#             4. Suggest crops based on NPK values and climate.
-#             Guidelines:
-#             - Keep answers concise (under 3-4 sentences).
-#             - Use emojis (🌾, 🚜, 🍃).
-#             - If asked about app features, guide them: Disease -> 'Disease' tab, Yield -> 'Yield' tab.
-#             """
-#         )
-#         chat_session = model.start_chat(history=[])
-#         print("✅ Gemini AI Connected.")
-#     except Exception as e:
-#         print(f"❌ Error configuring Gemini: {e}")
-#         chat_session = None
-# else:
-#     print("⚠️  Warning: GEMINI_API_KEY not found in .env file.")
-#     chat_session = None
 
 
 # --- DATA STRUCTURES (Pydantic Models) ---
@@ -173,7 +147,7 @@ class ChatInput(BaseModel):
 
 @app.get("/")
 def ping():
-    return {"message": "AgroAI Server is running 🚀"}
+    return {"message": "LeafCompass Server is running 🚀"}
 
 @app.post("/predict-disease")
 async def predict_disease(file: UploadFile = File(...)):
@@ -205,7 +179,7 @@ def predict_yield(data: YieldInput):
     if not yield_model:
         return {"error": "Yield model is not loaded."}
 
-    input_data = pd.DataFrame([data.dict()])
+    input_data = pd.DataFrame([data.model_dump()])
     
     # Ensure categorical variables (Region, Soil, Crop) are handled 
     # if your model pipeline expects them encoded, ensure input_data is processed here.
@@ -250,7 +224,7 @@ def chat_endpoint(data: ChatInput):
     try:
         # Create the message structure required by the "conversational" task
         messages = [
-            {"role": "system", "content": '''You are AgroBot, an intelligent agricultural assistant integrated into the 'AgroAI' web application.
+            {"role": "system", "content": '''You are AgroBot, an intelligent agricultural assistant integrated into the 'LeafCompass' application.
             Your capabilities:
             1. Diagnose plant diseases based on symptoms described by the user.
             2. Explain crop yield predictions.

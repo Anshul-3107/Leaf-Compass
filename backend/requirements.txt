@@ -1,12 +1,17 @@
-fastapi
-uvicorn
-python-multipart
-tensorflow-cpu
-joblib
-pandas
-numpy
-pillow
+# Python 3.9-compatible pinned versions (Dockerfile base: python:3.9)
+# TF 2.20.0 is the last release supporting Python 3.9 (2.21.0 dropped it).
+# numpy must be <2.0 for TF 2.20 compatibility.
+# pandas 3.x requires Python 3.10+, so pinned to 2.2.3.
+
+fastapi==0.115.12
+uvicorn==0.34.3
+python-multipart==0.0.20
+tensorflow-cpu==2.20.0
+joblib==1.4.2
+pandas==2.2.3
+numpy==1.26.4
+pillow==11.3.0
 scikit-learn==1.7.2
-pydantic
-python-dotenv
-huggingface_hub
+pydantic==2.11.7
+python-dotenv==1.1.0
+huggingface_hub==0.33.4

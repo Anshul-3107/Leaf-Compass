@@ -1,4 +1,6 @@
 yield_env/
+venv/
+backend/venv/
 __pycache__/
 .DS_Store
 .vscode/
