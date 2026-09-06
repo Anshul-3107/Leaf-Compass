@@ -1,1 +1,2 @@
 *.pkl filter=xet -text
+*.pt filter=xet -text
