@@ -1,10 +1,13 @@
-# Use Python 3.9
+# Use Python 3.11
 FROM python:3.11
 
 # Set working directory
 WORKDIR /app
 
-# Copy requirements and install
+# 1. Install heavy PyTorch CPU dependencies first (caches this layer)
+RUN pip install --no-cache-dir torch==2.11.0 torchvision==0.26.0 --index-url https://download.pytorch.org/whl/cpu
+
+# 2. Install the rest of the requirements (pip will skip torch/torchvision as they are satisfied)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
