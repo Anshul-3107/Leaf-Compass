@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.env
+venv/
+test_venv*/
+.idea/
+.git/
+.vscode/
+model training/
+flutter_frontend/

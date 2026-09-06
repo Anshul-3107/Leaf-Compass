@@ -30,6 +30,7 @@ script_dir = Path(__file__).resolve().parent
 backend_models_dir = (script_dir / ".." / ".." / "backend" / "models").resolve()
 sys.path.insert(0, str(backend_models_dir.parent))   # adds backend/ to sys.path
 
+# pyrefly: ignore [missing-import]
 from models.plant_disease_cnn import PlantDiseaseCNN  # noqa: E402
 
 # =============================================================================

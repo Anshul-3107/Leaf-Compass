@@ -16,7 +16,6 @@ dependencies:
 
   # HTTP / Networking
   dio: ^5.7.0
-  http: ^1.2.0
 
   # Image Picker (Disease Detection)
   image_picker: ^1.1.2

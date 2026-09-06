@@ -1,6 +1,5 @@
-import 'dart:convert';
+
 import 'package:dio/dio.dart';
-import 'package:http/http.dart' as http;
 import 'dart:io';
 
 /// Central API service — mirrors frontend/src/services/api.js
@@ -35,7 +34,6 @@ class ApiService {
       baseUrl: baseUrl,
       connectTimeout: const Duration(seconds: 15),
       receiveTimeout: const Duration(seconds: 30),
-      headers: {'Content-Type': 'application/json'},
     ),
   );
 
@@ -45,18 +43,14 @@ class ApiService {
   // ── Disease Detection (multipart image upload) ────────────────────────────
   /// Mirrors: predictDisease(formData) => API.post('/predict-disease', formData)
   static Future<Map<String, dynamic>> predictDisease(File imageFile) async {
-    final uri = Uri.parse('$baseUrl/predict-disease');
-    final request = http.MultipartRequest('POST', uri);
-    request.files
-        .add(await http.MultipartFile.fromPath('file', imageFile.path));
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(imageFile.path),
+    });
 
-    final streamedResponse = await request.send().timeout(
-          const Duration(seconds: 30),
-        );
-    final response = await http.Response.fromStream(streamedResponse);
+    final response = await _dio.post('/predict-disease', data: formData);
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body) as Map<String, dynamic>;
+      return response.data as Map<String, dynamic>;
     }
     throw Exception('Disease prediction failed: ${response.statusCode}');
   }
