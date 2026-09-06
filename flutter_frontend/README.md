@@ -6,7 +6,7 @@
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-FF6F00?logo=tensorflow&logoColor=white)](https://tensorflow.org)
+[![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org)
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://docker.com)
 
@@ -45,7 +45,7 @@ The platform is powered by a **FastAPI backend** that serves four trained machin
 
 | Feature | Description |
 |---|---|
-| 🍃 **Disease Detection** | Upload or photograph a leaf; a TensorFlow CNN identifies the disease and provides a confidence score |
+| 🍃 **Disease Detection** | Upload or photograph a leaf; a PyTorch CNN identifies the disease and provides a confidence score |
 | 📈 **Yield Prediction** | Predict crop yield (tons/ha) based on rainfall, temperature, soil type, region, and more |
 | 🌾 **Crop Recommendation** | Enter NPK values, pH, humidity, and state to get the best crop for your field |
 | 🧪 **Fertilizer Recommendation** | Receive fertilizer suggestions tailored to your soil moisture, crop type, and nutrient levels |
@@ -68,7 +68,7 @@ The platform is powered by a **FastAPI backend** that serves four trained machin
 ┌─────────────────────────────────────────────────────────┐
 │                  FastAPI Backend                        │
 │  ┌─────────────┐ ┌───────────────┐ ┌─────────────────┐ │
-│  │  TensorFlow │ │  scikit-learn │ │  Hugging Face   │ │
+│  │  PyTorch    │ │  scikit-learn │ │  Hugging Face   │ │
 │  │  (Disease)  │ │  (Yield/Crop/ │ │  DeepSeek V3.2  │ │
 │  │             │ │  Fertilizer)  │ │  (AgroBot)      │ │
 │  └─────────────┘ └───────────────┘ └─────────────────┘ │
@@ -89,7 +89,7 @@ The platform is powered by a **FastAPI backend** that serves four trained machin
 
 ### Backend (Python / FastAPI)
 - **FastAPI** + **Uvicorn** — high-performance async API
-- **TensorFlow / Keras** — plant disease CNN model
+- **PyTorch** — plant disease CNN model
 - **scikit-learn / joblib** — yield, crop, and fertilizer models
 - **Pandas / NumPy** — data processing
 - **Hugging Face `InferenceClient`** — DeepSeek V3.2 chat
@@ -110,8 +110,8 @@ Leaf-Compass/
 │   ├── main.py                 # All API endpoints & model loading
 │   ├── requirements.txt        # Python dependencies
 │   ├── Dockerfile              # Container configuration
-│   └── models/                 # Trained model files (.h5, .pkl)
-│       ├── plant_disease_prediction_model.h5
+│   └── models/                 # Trained model files (.pt, .pkl)
+│       ├── plant_disease_prediction_model.pt
 │       ├── class_indices.json
 │       ├── yield_prediction_model.pkl
 │       ├── crop_recommendation_model.pkl
@@ -239,7 +239,7 @@ The web app will be available at `http://localhost:3000`.
 
 | Model | Type | Task | Input |
 |---|---|---|---|
-| **Plant Disease CNN** | TensorFlow / Keras `.h5` | Classify 38 plant disease categories | 224×224 leaf image |
+| **Plant Disease CNN** | PyTorch `.pt` | Classify 38 plant disease categories | 224×224 leaf image |
 | **Yield Predictor** | scikit-learn `.pkl` | Predict crop yield in tons/ha | Weather, soil, crop, region params |
 | **Crop Recommender** | scikit-learn `.pkl` | Suggest the optimal crop | NPK values, pH, humidity, state |
 | **Fertilizer Recommender** | scikit-learn `.pkl` | Recommend fertilizer type | Soil nutrients, crop type, moisture |

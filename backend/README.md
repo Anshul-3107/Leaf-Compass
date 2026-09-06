@@ -37,7 +37,7 @@ API=<your_huggingface_token>
 
 | File | Description | Where to get it |
 |------|-------------|-----------------|
-| `models/plant_disease_prediction_model.h5` | Keras CNN for plant disease classification (38 classes) | Download from: **[your model host — fill this in]** |
+| `models/plant_disease_prediction_model.pt` | PyTorch CNN state dict for plant disease classification (38 classes) | Train locally with `train_disease_model.py`, or download from: **[your model host — fill this in]** |
 | `models/yield_prediction_model.pkl` | Scikit-learn model for crop yield prediction | Download from: **[your model host — fill this in]** |
 
 The following model files **are** committed to the repo and need no manual action:

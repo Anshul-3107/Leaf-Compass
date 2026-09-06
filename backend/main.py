@@ -12,14 +12,10 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 from huggingface_hub import InferenceClient
 
-# TensorFlow is optional
-try:
-    import tensorflow as tf
-    TF_AVAILABLE = True
-except ModuleNotFoundError:
-    tf = None
-    TF_AVAILABLE = False
-    print("⚠️  TensorFlow not available (requires Python ≤ 3.12). Disease detection disabled.")
+# PyTorch for plant disease detection
+import torch
+import torchvision.transforms as T
+from models.plant_disease_cnn import PlantDiseaseCNN
 
 # --- CONFIGURATION & SETUP ---
 load_dotenv() # Loads environment variables from .env file
@@ -54,21 +50,24 @@ crop_model = None
 fertilizer_model = None
 class_names = {}
 
-# 1. Load Plant Disease Model
+# 1. Load Plant Disease Model (PyTorch state dict)
 try:
-    if TF_AVAILABLE:
-        disease_model = tf.keras.models.load_model("./models/plant_disease_prediction_model.h5")
-        with open("./models/class_indices.json", "r") as f:
-            class_indices = json.load(f)
-        class_names = {int(k): v for k, v in class_indices.items()}
-        print("✅ Disease Model Loaded.")
-    else:
-        print("⚠️  Skipping disease model — TensorFlow not installed.")
+    _disease_model = PlantDiseaseCNN(num_classes=38)
+    _disease_model.load_state_dict(
+        torch.load("./models/plant_disease_prediction_model.pt",
+                   map_location="cpu")
+    )
+    _disease_model.eval()
+    disease_model = _disease_model
+    with open("./models/class_indices.json", "r") as f:
+        class_indices = json.load(f)
+    class_names = {int(k): v for k, v in class_indices.items()}
+    print("✅ Disease Model Loaded.")
 except FileNotFoundError:
     print(
-        "❌ plant_disease_prediction_model.h5 not found in ./models/. "
+        "❌ plant_disease_prediction_model.pt not found in ./models/. "
         "This file is not committed to git due to its size. "
-        "TODO: replace with your actual model hosting URL — "
+        "Train it locally with train_disease_model.py, or "
         "download and place it in backend/models/ before starting the server."
     )
 except Exception as e:
@@ -149,24 +148,32 @@ class ChatInput(BaseModel):
 def ping():
     return {"message": "LeafCompass Server is running 🚀"}
 
+# Preprocessing transform — must match what train_disease_model.py used
+_disease_transform = T.Compose([
+    T.Resize((224, 224)),
+    T.ToTensor(),
+    T.Normalize(mean=[0.485, 0.456, 0.406],
+                std=[0.229, 0.224, 0.225]),
+])
+
 @app.post("/predict-disease")
 async def predict_disease(file: UploadFile = File(...)):
     if not disease_model:
         return {"error": "Disease model is not loaded."}
-    
+
     try:
-        # Process Image
+        # Load and preprocess image
         image_data = await file.read()
-        image = Image.open(BytesIO(image_data))
-        image = image.resize((224, 224))
-        image = np.array(image).astype('float32') / 255.0
-        img_batch = np.expand_dims(image, 0)
-        
+        image = Image.open(BytesIO(image_data)).convert("RGB")
+        tensor = _disease_transform(image).unsqueeze(0)  # (1, 3, 224, 224)
+
         # Predict
-        predictions = disease_model.predict(img_batch)
-        predicted_index = np.argmax(predictions[0])
-        confidence = float(np.max(predictions[0]))
-        
+        with torch.no_grad():
+            logits = disease_model(tensor)              # (1, 38)
+        probs          = torch.softmax(logits, dim=1)
+        predicted_index = int(probs.argmax(dim=1))
+        confidence      = float(probs.max())
+
         return {
             "class": class_names.get(predicted_index, "Unknown"),
             "confidence": confidence

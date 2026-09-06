@@ -46,7 +46,7 @@ LeafCompass bridges the gap between modern AI and everyday farming. Whether you'
 
 ### 🍂 Plant Disease Detection
 - **Input:** Upload a crop leaf image
-- **Model:** Custom CNN built with TensorFlow/Keras
+- **Model:** Custom CNN built with PyTorch
 - **Output:** Disease name + confidence score
 
 ### 🌾 Crop Yield Prediction
@@ -84,7 +84,7 @@ LeafCompass bridges the gap between modern AI and everyday farming. Whether you'
 | Tool | Purpose |
 |---|---|
 | FastAPI + Uvicorn | High-performance async API server |
-| TensorFlow / Keras | Plant disease CNN inference |
+| PyTorch            | Plant disease CNN inference |
 | Scikit-learn / Joblib | Yield, Crop & Fertilizer ML models |
 | Pandas / NumPy | Data processing & structuring |
 | Hugging Face `InferenceClient` | DeepSeek V3.2 LLM chat |
