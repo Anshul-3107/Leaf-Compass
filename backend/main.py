@@ -17,19 +17,28 @@ import torch
 import torchvision.transforms as T
 from models.plant_disease_cnn import PlantDiseaseCNN
 
-# --- CONFIGURATION & SETUP ---
-load_dotenv() # Loads environment variables from .env file
+
+# ============================================================
+# CONFIGURATION & SETUP
+# ============================================================
+
+load_dotenv()
 
 app = FastAPI()
 
-# CORS Setup
-# NOTE: Render service slugs are always lowercase — update the URL below
-# to match your exact Render service name if it differs.
-# The HuggingFace Spaces URL is https://jain-mayukh-lc-api.hf.space
+
+# ============================================================
+# CORS SETUP
+# ============================================================
+
 origins = [
     "http://localhost:3000",
-    "https://leafcompass.onrender.com",       # Render (lowercase slug)
-    "https://jain-mayukh-lc-api.hf.space",   # Hugging Face Spaces
+
+    # Render backend
+    "https://leaf-compass-api.onrender.com",
+
+    # Hugging Face Spaces
+    "https://jain-mayukh-lc-api.hf.space",
 ]
 
 app.add_middleware(
@@ -40,72 +49,132 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- LOAD MODELS ---
+
+# ============================================================
+# LOAD MODELS
+# ============================================================
+
 print("--- Starting Server & Loading Models ---")
 
-# Global variables for models
 disease_model = None
 yield_model = None
 crop_model = None
 fertilizer_model = None
 class_names = {}
 
-# 1. Load Plant Disease Model (PyTorch state dict)
+
+# ------------------------------------------------------------
+# 1. Plant Disease Model - PyTorch
+# ------------------------------------------------------------
+
 try:
     _disease_model = PlantDiseaseCNN(num_classes=38)
+
     _disease_model.load_state_dict(
-        torch.load("./models/plant_disease_prediction_model.pt",
-                   map_location="cpu")
+        torch.load(
+            "./models/plant_disease_prediction_model.pt",
+            map_location="cpu",
+            weights_only=False
+        )
     )
+
     _disease_model.eval()
+
     disease_model = _disease_model
+
     with open("./models/class_indices.json", "r") as f:
         class_indices = json.load(f)
-    class_names = {int(k): v for k, v in class_indices.items()}
+
+    class_names = {
+        int(k): v for k, v in class_indices.items()
+    }
+
     print("✅ Disease Model Loaded.")
+
 except FileNotFoundError:
     print(
         "❌ plant_disease_prediction_model.pt not found in ./models/. "
-        "This file is not committed to git due to its size. "
-        "Train it locally with train_disease_model.py, or "
-        "download and place it in backend/models/ before starting the server."
+        "Make sure the model is present in Git LFS."
     )
+
 except Exception as e:
     print(f"❌ Error loading disease model: {e}")
 
-# 2. Load Yield Prediction Model
+
+# ------------------------------------------------------------
+# 2. Yield Prediction Model
+# ------------------------------------------------------------
+
 try:
-    yield_model = joblib.load("./models/yield_prediction_model.pkl")
+    yield_model = joblib.load(
+        "./models/yield_prediction_model.pkl"
+    )
+
     print("✅ Yield Model Loaded.")
+
 except FileNotFoundError:
     print(
         "❌ yield_prediction_model.pkl not found in ./models/. "
-        "This file is not committed to git due to its size. "
-        "TODO: replace with your actual model hosting URL — "
-        "download and place it in backend/models/ before starting the server."
+        "Make sure the model is present in Git LFS."
     )
+
 except Exception as e:
     print(f"❌ Error loading yield model: {e}")
 
-# 3. Load Crop Recommendation Model
+
+# ------------------------------------------------------------
+# 3. Crop Recommendation Model
+# ------------------------------------------------------------
+
 try:
-    crop_model = joblib.load("./models/crop_recommendation_model.pkl")
+    crop_model = joblib.load(
+        "./models/crop_recommendation_model.pkl"
+    )
+
     print("✅ Crop Model Loaded.")
+
+except FileNotFoundError:
+    print(
+        "❌ crop_recommendation_model.pkl not found in ./models/."
+    )
+
 except Exception as e:
     print(f"❌ Error loading crop model: {e}")
 
-# 4. Load Fertilizer Recommendation Model
+
+# ------------------------------------------------------------
+# 4. Fertilizer Recommendation Model
+# ------------------------------------------------------------
+
 try:
-    fertilizer_model = joblib.load("./models/fertilizer_recommendation_model.pkl")
+    fertilizer_model = joblib.load(
+        "./models/fertilizer_recommendation_model.pkl"
+    )
+
     print("✅ Fertilizer Model Loaded.")
+
+except FileNotFoundError:
+    print(
+        "❌ fertilizer_recommendation_model.pkl not found in ./models/."
+    )
+
 except Exception as e:
     print(f"❌ Error loading fertilizer model: {e}")
 
-# 5. Configure DeepSeek AI via Hugging Face Inference API
-client = InferenceClient(model="deepseek-ai/DeepSeek-V3.2", token=os.getenv("API"))
+
+# ------------------------------------------------------------
+# 5. DeepSeek AI via Hugging Face
+# ------------------------------------------------------------
+
+client = InferenceClient(
+    model="deepseek-ai/DeepSeek-V3.2",
+    token=os.getenv("API")
+)
 
 
-# --- DATA STRUCTURES (Pydantic Models) ---
+# ============================================================
+# DATA STRUCTURES
+# ============================================================
 
 class YieldInput(BaseModel):
     Rainfall_mm: float
@@ -118,6 +187,7 @@ class YieldInput(BaseModel):
     Fertilizer_Used: bool
     Irrigation_Used: bool
 
+
 class CropInput(BaseModel):
     N: float
     P: float
@@ -126,139 +196,347 @@ class CropInput(BaseModel):
     humidity: float
     ph: float
     rainfall: float
-    state: str 
+    state: str
+
 
 class FertilizerInput(BaseModel):
     Temperature: float
     Humidity: float
     Moisture: float
-    Soil_Type: str 
+    Soil_Type: str
     Crop_Type: str
     Nitrogen: float
     Potassium: float
     Phosphorous: float
 
+
 class ChatInput(BaseModel):
     message: str
 
 
-# --- ENDPOINTS ---
+# ============================================================
+# HEALTH CHECK
+# ============================================================
 
 @app.get("/")
 def ping():
-    return {"message": "LeafCompass Server is running 🚀"}
+    return {
+        "message": "LeafCompass Server is running 🚀"
+    }
 
-# Preprocessing transform — must match what train_disease_model.py used
+
+# ============================================================
+# PLANT DISEASE IMAGE PREPROCESSING
+# ============================================================
+
 _disease_transform = T.Compose([
     T.Resize((224, 224)),
     T.ToTensor(),
-    T.Normalize(mean=[0.485, 0.456, 0.406],
-                std=[0.229, 0.224, 0.225]),
+    T.Normalize(
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225]
+    ),
 ])
 
+
+# ============================================================
+# PLANT DISEASE PREDICTION
+# ============================================================
+
 @app.post("/predict-disease")
-async def predict_disease(file: UploadFile = File(...)):
-    if not disease_model:
-        return {"error": "Disease model is not loaded."}
+async def predict_disease(
+    file: UploadFile = File(...)
+):
+
+    if disease_model is None:
+        return {
+            "error": "Disease model is not loaded."
+        }
 
     try:
-        # Load and preprocess image
-        image_data = await file.read()
-        image = Image.open(BytesIO(image_data)).convert("RGB")
-        tensor = _disease_transform(image).unsqueeze(0)  # (1, 3, 224, 224)
 
-        # Predict
+        # Read uploaded image
+        image_data = await file.read()
+
+        image = Image.open(
+            BytesIO(image_data)
+        ).convert("RGB")
+
+        # Preprocess
+        tensor = _disease_transform(
+            image
+        ).unsqueeze(0)
+
+        # Prediction
         with torch.no_grad():
-            logits = disease_model(tensor)              # (1, 38)
-        probs          = torch.softmax(logits, dim=1)
-        predicted_index = int(probs.argmax(dim=1))
-        confidence      = float(probs.max())
+
+            logits = disease_model(tensor)
+
+            probs = torch.softmax(
+                logits,
+                dim=1
+            )
+
+            predicted_index = int(
+                probs.argmax(dim=1)
+            )
+
+            confidence = float(
+                probs.max()
+            )
 
         return {
-            "class": class_names.get(predicted_index, "Unknown"),
+            "class": class_names.get(
+                predicted_index,
+                "Unknown"
+            ),
             "confidence": confidence
         }
+
     except Exception as e:
-        return {"error": str(e)}
+
+        print(
+            f"❌ Disease prediction error: {e}"
+        )
+
+        return {
+            "error": str(e)
+        }
+
+
+# ============================================================
+# YIELD PREDICTION
+# ============================================================
 
 @app.post("/predict-yield")
 def predict_yield(data: YieldInput):
-    if not yield_model:
-        return {"error": "Yield model is not loaded."}
 
-    input_data = pd.DataFrame([data.model_dump()])
-    
-    # Ensure categorical variables (Region, Soil, Crop) are handled 
-    # if your model pipeline expects them encoded, ensure input_data is processed here.
-    
-    prediction = yield_model.predict(input_data)
-    return {"predicted_yield": float(prediction[0])}
+    if yield_model is None:
+        return {
+            "error": "Yield model is not loaded."
+        }
+
+    try:
+
+        input_data = pd.DataFrame([
+            data.model_dump()
+        ])
+
+        prediction = yield_model.predict(
+            input_data
+        )
+
+        return {
+            "predicted_yield": float(
+                prediction[0]
+            )
+        }
+
+    except Exception as e:
+
+        print(
+            f"❌ Yield prediction error: {e}"
+        )
+
+        return {
+            "error": str(e)
+        }
+
+
+# ============================================================
+# CROP RECOMMENDATION
+# ============================================================
 
 @app.post("/recommend-crop")
 def recommend_crop(data: CropInput):
-    if not crop_model:
-        return {"error": "Crop model is not loaded."}
-    
-    # Note: Ensure 'data.state' is encoded if your model expects a number!
-    features = pd.DataFrame([[
-        data.N, data.P, data.K, 
-        data.temperature, data.humidity, data.ph, 
-        data.rainfall, data.state
-    ]], columns=['N_SOIL', 'P_SOIL', 'K_SOIL', 'TEMPERATURE', 'HUMIDITY', 'ph', 'RAINFALL', 'STATE'])
-    
-    prediction = crop_model.predict(features)
-    return {"recommended_crop": prediction[0]}
+
+    if crop_model is None:
+        return {
+            "error": "Crop model is not loaded."
+        }
+
+    try:
+
+        features = pd.DataFrame(
+            [[
+                data.N,
+                data.P,
+                data.K,
+                data.temperature,
+                data.humidity,
+                data.ph,
+                data.rainfall,
+                data.state
+            ]],
+            columns=[
+                "N_SOIL",
+                "P_SOIL",
+                "K_SOIL",
+                "TEMPERATURE",
+                "HUMIDITY",
+                "ph",
+                "RAINFALL",
+                "STATE"
+            ]
+        )
+
+        prediction = crop_model.predict(
+            features
+        )
+
+        return {
+            "recommended_crop": prediction[0]
+        }
+
+    except Exception as e:
+
+        print(
+            f"❌ Crop recommendation error: {e}"
+        )
+
+        return {
+            "error": str(e)
+        }
+
+
+# ============================================================
+# FERTILIZER RECOMMENDATION
+# ============================================================
 
 @app.post("/recommend-fertilizer")
-def recommend_fertilizer(data: FertilizerInput):
-    if not fertilizer_model:
-        return {"error": "Fertilizer model is not loaded."}
+def recommend_fertilizer(
+    data: FertilizerInput
+):
 
-    input_df = pd.DataFrame([[
-        data.Temperature, data.Humidity, data.Moisture, 
-        data.Soil_Type, data.Crop_Type, 
-        data.Nitrogen, data.Potassium, data.Phosphorous
-    ]], columns=[
-        'Temperature', 'Humidity', 'Moisture', 'Soil_Type', 
-        'Crop_Type', 'Nitrogen', 'Potassium', 'Phosphorous'
-    ])
-    
-    prediction = fertilizer_model.predict(input_df)
-    return {"recommended_fertilizer": prediction[0]}
+    if fertilizer_model is None:
+        return {
+            "error": "Fertilizer model is not loaded."
+        }
+
+    try:
+
+        input_df = pd.DataFrame(
+            [[
+                data.Temperature,
+                data.Humidity,
+                data.Moisture,
+                data.Soil_Type,
+                data.Crop_Type,
+                data.Nitrogen,
+                data.Potassium,
+                data.Phosphorous
+            ]],
+            columns=[
+                "Temperature",
+                "Humidity",
+                "Moisture",
+                "Soil_Type",
+                "Crop_Type",
+                "Nitrogen",
+                "Potassium",
+                "Phosphorous"
+            ]
+        )
+
+        prediction = fertilizer_model.predict(
+            input_df
+        )
+
+        return {
+            "recommended_fertilizer": prediction[0]
+        }
+
+    except Exception as e:
+
+        print(
+            f"❌ Fertilizer recommendation error: {e}"
+        )
+
+        return {
+            "error": str(e)
+        }
+
+
+# ============================================================
+# AGROBOT CHAT
+# ============================================================
 
 @app.post("/chat")
 def chat_endpoint(data: ChatInput):
+
     try:
-        # Create the message structure required by the "conversational" task
+
         messages = [
-            {"role": "system", "content": '''You are AgroBot, an intelligent agricultural assistant integrated into the 'LeafCompass' application.
-            Your capabilities:
-            1. Diagnose plant diseases based on symptoms described by the user.
-            2. Explain crop yield predictions.
-            3. Recommend fertilizers for specific soil types.
-            4. Suggest crops based on NPK values and climate.
-            Guidelines:
-            - Keep answers concise (under 3-4 sentences).
-            - Use emojis (🌾, 🚜, 🍃).
-            - If asked about app features, guide them: Disease -> 'Disease' tab, Yield -> 'Yield' tab.
-            '''},
-            {"role": "user", "content": data.message}
+            {
+                "role": "system",
+                "content": """
+You are AgroBot, an intelligent agricultural assistant
+integrated into the LeafCompass application.
+
+Your capabilities:
+
+1. Diagnose plant diseases based on symptoms described
+   by the user.
+2. Explain crop yield predictions.
+3. Recommend fertilizers for specific soil types.
+4. Suggest crops based on NPK values and climate.
+
+Guidelines:
+
+- Keep answers concise, under 3-4 sentences.
+- Use emojis such as 🌾 🚜 🍃.
+- If asked about app features, guide users:
+  Disease -> Disease tab
+  Yield -> Yield tab
+"""
+            },
+            {
+                "role": "user",
+                "content": data.message
+            }
         ]
 
-        # Use chat_completion instead of text_generation
         response = client.chat_completion(
-            messages, 
+            messages,
             max_tokens=200
         )
 
-        # Extract the actual text from the response object
-        bot_reply = response.choices[0].message.content
-        
-        return {"response": bot_reply}
+        bot_reply = (
+            response
+            .choices[0]
+            .message
+            .content
+        )
+
+        return {
+            "response": bot_reply
+        }
 
     except Exception as e:
-        print(f"Chat Error: {e}")
-        return {"response": "I'm having trouble connecting to the satellite. 📡 Please try again later!"}
-    
+
+        print(
+            f"❌ Chat Error: {e}"
+        )
+
+        return {
+            "response":
+            "I'm having trouble connecting to the satellite. "
+            "📡 Please try again later!"
+        }
+
+
+# ============================================================
+# LOCAL / RENDER STARTUP
+# ============================================================
+
 if __name__ == "__main__":
-    uvicorn.run(app, host="localhost", port=8000)
+
+    port = int(
+        os.getenv("PORT", "8000")
+    )
+
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=port
+    )
