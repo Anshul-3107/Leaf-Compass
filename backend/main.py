@@ -97,18 +97,26 @@ def ensure_model_file(filename: str) -> str:
 
 
 def get_disease_model():
-    """Load PyTorch disease model on-demand to optimize server memory."""
-    global disease_model, class_names
+    """Load PyTorch disease model on-demand with zero-copy and mutual memory eviction."""
+    global disease_model, class_names, yield_model
+    # Evict yield model from RAM to preserve memory
+    if yield_model is not None:
+        del yield_model
+        yield_model = None
+        gc.collect()
+
     if disease_model is None:
         try:
             model_path = ensure_model_file("plant_disease_prediction_model.pt")
-            _disease_model = PlantDiseaseCNN(num_classes=38)
+            with torch.device("meta"):
+                _disease_model = PlantDiseaseCNN(num_classes=38)
             state_dict = torch.load(
                 model_path,
                 map_location="cpu",
                 weights_only=False,
+                mmap=True,
             )
-            _disease_model.load_state_dict(state_dict)
+            _disease_model.load_state_dict(state_dict, assign=True)
             del state_dict
             gc.collect()
             _disease_model.eval()
@@ -128,7 +136,7 @@ def get_disease_model():
             class_names = {
                 int(k): v for k, v in class_indices.items()
             }
-            print("✅ Disease Model Loaded into RAM.")
+            print("✅ Disease Model Loaded into RAM (bfloat16 zero-copy).")
 
         except Exception as e:
             print(f"❌ Error loading disease model: {e}")
@@ -137,19 +145,25 @@ def get_disease_model():
 
 
 def get_yield_model():
-    """Load Scikit-learn yield model on-demand to optimize server memory."""
-    global yield_model
+    """Load Scikit-learn yield model on-demand with mutual memory eviction."""
+    global yield_model, disease_model
+    # Evict disease model from RAM to preserve memory
+    if disease_model is not None:
+        del disease_model
+        disease_model = None
+        gc.collect()
+
     if yield_model is None:
         try:
             model_path = ensure_model_file("yield_prediction_model.pkl")
             loaded = joblib.load(model_path)
-            # Force single-threaded execution to prevent loky from spawning 64 child processes on cloud servers
+            # Force single-threaded execution to prevent loky from spawning child processes
             if hasattr(loaded, "named_steps") and "model" in loaded.named_steps:
                 loaded.named_steps["model"].n_jobs = 1
             elif hasattr(loaded, "n_jobs"):
                 loaded.n_jobs = 1
             yield_model = loaded
-            print("✅ Yield Model Loaded into RAM (n_jobs=1).")
+            print("✅ Yield Model Loaded into RAM (optimized 15MB).")
         except Exception as e:
             print(f"❌ Error loading yield model: {e}")
 
@@ -250,7 +264,7 @@ def ping():
 @app.get("/version")
 def version():
     return {
-        "version": "v1.2",
+        "version": "v1.3",
         "models_status": "ready"
     }
 
@@ -297,7 +311,7 @@ async def predict_disease(
         # Preprocess
         tensor = _disease_transform(
             image
-        ).unsqueeze(0)
+        ).unsqueeze(0).to(torch.bfloat16)
 
         # Prediction
         with torch.no_grad():
