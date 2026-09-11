@@ -16,14 +16,18 @@ import '../services/weather_service.dart';
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
-  static const _marketRates = [
-    {'crop': 'Wheat', 'price': '₹2,125/qt', 'trend': 'up'},
-    {'crop': 'Rice', 'price': '₹2,900/qt', 'trend': 'stable'},
-    {'crop': 'Cotton', 'price': '₹6,200/qt', 'trend': 'down'},
+  static const _dailyTips = [
+    '💡 Tip: Water your crops early in the morning (6–9 AM) to minimize evaporation and prevent fungal diseases.',
+    '💡 Tip: Rotate crops each season to prevent soil nutrient depletion and break pest cycles.',
+    '💡 Tip: Test your soil pH every 2-3 years to ensure optimal nutrient absorption for your plants.',
+    '💡 Tip: Use organic mulch to retain soil moisture, suppress weeds, and slowly add nutrients back.',
+    '💡 Tip: Introduce beneficial insects like ladybugs to naturally control pest populations.',
+    '💡 Tip: Practice deep, infrequent watering to encourage deeper root growth and drought resistance.',
+    '💡 Tip: Clean your farming tools regularly to prevent spreading soil-borne diseases.',
+    '💡 Tip: Monitor for pests regularly; early detection makes natural interventions much more effective.',
+    '💡 Tip: Plant cover crops during the off-season to prevent erosion and improve soil structure.',
+    '💡 Tip: Prune dead or diseased foliage promptly to improve air circulation and direct energy to healthy growth.',
   ];
-
-  static const _dailyTip =
-      '💡 Tip: Water your crops early in the morning (6–9 AM) to minimize evaporation and prevent fungal diseases.';
 
   static final _features = [
     {
@@ -79,9 +83,12 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _permDeniedForever = false;
   bool _locationDisabled = false;
 
+  late String _currentTip;
+
   @override
   void initState() {
     super.initState();
+    _currentTip = HomeScreen._dailyTips[DateTime.now().millisecond % HomeScreen._dailyTips.length];
     _fetchWeather();
   }
 
@@ -180,26 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: AppSpacing.md),
 
-                  // Tip + Market in a row on wider screens
-                  LayoutBuilder(builder: (ctx, constraints) {
-                    if (constraints.maxWidth > 500) {
-                      return Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(child: _TipCard()),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(child: _MarketCard(rates: HomeScreen._marketRates)),
-                        ],
-                      );
-                    }
-                    return Column(
-                      children: [
-                        _TipCard(),
-                        const SizedBox(height: AppSpacing.md),
-                        _MarketCard(rates: HomeScreen._marketRates),
-                      ],
-                    );
-                  }),
+                  _TipCard(tip: _currentTip),
 
                   // ── Features Grid ──────────────────────────────────────
                   const SizedBox(height: AppSpacing.xxxl),
@@ -611,6 +599,10 @@ class _SkeletonLine extends StatelessWidget {
 
 // ── Daily Tip Card ─────────────────────────────────────────────────────────
 class _TipCard extends StatelessWidget {
+  final String tip;
+
+  const _TipCard({required this.tip});
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -634,7 +626,7 @@ class _TipCard extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
-              HomeScreen._dailyTip,
+              tip,
               style: AppTypography.bodySmall.copyWith(
                 fontStyle: FontStyle.italic,
                 height: 1.5,
@@ -663,68 +655,6 @@ class _TipCard extends StatelessWidget {
         ),
       ),
     ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.06, end: 0);
-  }
-}
-
-// ── Market Rates Card ──────────────────────────────────────────────────────
-class _MarketCard extends StatelessWidget {
-  final List<Map<String, String>> rates;
-  const _MarketCard({required this.rates});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.cardPadding),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-          border: Border(
-              left: BorderSide(color: AppColors.primary, width: 4)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.trending_up,
-                    size: 14, color: AppColors.primary),
-                const SizedBox(width: AppSpacing.sm),
-                Text('MARKET RATES', style: AppTypography.labelSmall),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            ...rates.map((item) {
-              IconData trendIcon = Icons.remove;
-              Color trendColor = AppColors.onSurfaceMuted;
-              if (item['trend'] == 'up') {
-                trendIcon = Icons.trending_up;
-                trendColor = AppColors.success;
-              } else if (item['trend'] == 'down') {
-                trendIcon = Icons.trending_down;
-                trendColor = AppColors.error;
-              }
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 5),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(item['crop']!, style: AppTypography.bodyMedium),
-                    Row(
-                      children: [
-                        Text(item['price']!,
-                            style: AppTypography.labelLarge),
-                        const SizedBox(width: AppSpacing.xs),
-                        Icon(trendIcon, size: 14, color: trendColor),
-                      ],
-                    ),
-                  ],
-                ),
-              );
-            }),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(delay: 250.ms).slideY(begin: 0.06, end: 0);
   }
 }
 
