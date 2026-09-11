@@ -1,4 +1,5 @@
 import os
+import gc
 import json
 import uvicorn
 import joblib
@@ -12,8 +13,9 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 from huggingface_hub import InferenceClient, hf_hub_download
 
-# PyTorch for plant disease detection
+# PyTorch for plant disease detection (single-threaded for cloud memory optimization)
 import torch
+torch.set_num_threads(1)
 import torchvision.transforms as T
 from models.plant_disease_cnn import PlantDiseaseCNN
 
@@ -101,13 +103,14 @@ def get_disease_model():
         try:
             model_path = ensure_model_file("plant_disease_prediction_model.pt")
             _disease_model = PlantDiseaseCNN(num_classes=38)
-            _disease_model.load_state_dict(
-                torch.load(
-                    model_path,
-                    map_location="cpu",
-                    weights_only=False,
-                )
+            state_dict = torch.load(
+                model_path,
+                map_location="cpu",
+                weights_only=False,
             )
+            _disease_model.load_state_dict(state_dict)
+            del state_dict
+            gc.collect()
             _disease_model.eval()
             disease_model = _disease_model
 
@@ -313,6 +316,9 @@ async def predict_disease(
             confidence = float(
                 probs.max()
             )
+
+        del tensor, logits, probs
+        gc.collect()
 
         return {
             "class": names.get(
