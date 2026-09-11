@@ -38,13 +38,13 @@ origins = [
     "https://leaf-compass-api.onrender.com",
 
     # Hugging Face Spaces
-    "https://jain-mayukh-lc-api.hf.space",
+    "https://anshularohi-leaf-compass-api.hf.space",
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

@@ -841,13 +841,13 @@ class _FooterSection extends StatelessWidget {
                   IconButton(
                     icon: Icon(Icons.code, color: AppColors.footerText),
                     onPressed: () => _launch(
-                        'https://github.com/Mayukh-Jain/Leaf-Compass'),
+                        'https://github.com/Anshul-3107/Leaf-Compass'),
                   ),
                   IconButton(
                     icon:
                         Icon(Icons.mail_outline, color: AppColors.footerText),
                     onPressed: () =>
-                        _launch('mailto:jainmayukh@gmail.com'),
+                        _launch('mailto:anshularohi31072004@gmail.com'),
                   ),
                   IconButton(
                     icon: Icon(Icons.phone_outlined,
@@ -869,7 +869,7 @@ class _FooterSection extends StatelessWidget {
                   style: AppTypography.labelMedium
                       .copyWith(color: AppColors.footerText)),
               const Icon(Icons.favorite, color: AppColors.error, size: 14),
-              Text(' for farmers. © ${DateTime.now().year} | Mayukh Jain',
+              Text(' for farmers. © ${DateTime.now().year} | Anshul Arohi',
                   style: AppTypography.labelMedium
                       .copyWith(color: AppColors.footerText)),
             ],

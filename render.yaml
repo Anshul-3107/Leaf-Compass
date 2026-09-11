@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: leaf-compass-api
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+    envVars:
+      - key: API
+        sync: false
