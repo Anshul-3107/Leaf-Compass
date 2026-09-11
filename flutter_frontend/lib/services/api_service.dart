@@ -26,7 +26,7 @@ class ApiService {
   /// Falls back to the Android-emulator loopback alias when no flag is supplied.
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:8000',
+    defaultValue: 'https://leaf-compass-api-0udm.onrender.com',
   );
 
   static final Dio _dio = Dio(
