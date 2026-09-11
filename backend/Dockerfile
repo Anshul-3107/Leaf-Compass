@@ -14,8 +14,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application
 COPY . .
 
-# Create a non-root user (Security requirement for HF Spaces)
-RUN useradd -m -u 1000 user
+# Create a non-root user and grant permissions to /app
+RUN useradd -m -u 1000 user && chown -R user:user /app
 USER user
 ENV HOME=/home/user \
     PATH=/home/user/.local/bin:$PATH

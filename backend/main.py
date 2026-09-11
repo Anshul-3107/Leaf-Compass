@@ -68,14 +68,19 @@ class_names = {}
 # (Keeps RAM under 250MB for Render Free Tier)
 # ------------------------------------------------------------
 
+def is_valid_model_file(path: str) -> bool:
+    """Check if model file exists and is a real binary (> 10 KB), not an un-pulled Git LFS pointer text file (~130 bytes)."""
+    return os.path.exists(path) and os.path.getsize(path) > 10240
+
+
 def ensure_model_file(filename: str) -> str:
-    """Ensure model file exists locally; if missing (e.g. on Render), auto-download from Hugging Face."""
+    """Ensure model file exists locally and is valid; if missing or an LFS pointer, download from Hugging Face."""
     base_dir = os.path.dirname(os.path.abspath(__file__))
     models_dir = os.path.join(base_dir, "models")
     local_path = os.path.join(models_dir, filename)
 
-    if not os.path.exists(local_path):
-        print(f"📥 Model '{filename}' not found locally. Downloading from Hugging Face storage...")
+    if not is_valid_model_file(local_path):
+        print(f"📥 Model '{filename}' missing or LFS pointer. Downloading from Hugging Face storage...")
         token = os.getenv("API")
         os.makedirs(models_dir, exist_ok=True)
         hf_hub_download(
@@ -142,38 +147,32 @@ def get_yield_model():
     return yield_model
 
 
-# ------------------------------------------------------------
-# 3. Crop Recommendation Model
-# ------------------------------------------------------------
+def get_crop_model():
+    """Load Scikit-learn crop recommendation model on-demand."""
+    global crop_model
+    if crop_model is None:
+        try:
+            model_path = ensure_model_file("crop_recommendation_model.pkl")
+            crop_model = joblib.load(model_path)
+            print("✅ Crop Model Loaded into RAM.")
+        except Exception as e:
+            print(f"❌ Error loading crop model: {e}")
 
-try:
-    _crop_model_path = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        "models",
-        "crop_recommendation_model.pkl"
-    )
-    crop_model = joblib.load(_crop_model_path)
-    print("✅ Crop Model Loaded.")
-
-except Exception as e:
-    print(f"❌ Error loading crop model: {e}")
+    return crop_model
 
 
-# ------------------------------------------------------------
-# 4. Fertilizer Recommendation Model
-# ------------------------------------------------------------
+def get_fertilizer_model():
+    """Load Scikit-learn fertilizer recommendation model on-demand."""
+    global fertilizer_model
+    if fertilizer_model is None:
+        try:
+            model_path = ensure_model_file("fertilizer_recommendation_model.pkl")
+            fertilizer_model = joblib.load(model_path)
+            print("✅ Fertilizer Model Loaded into RAM.")
+        except Exception as e:
+            print(f"❌ Error loading fertilizer model: {e}")
 
-try:
-    _fert_model_path = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        "models",
-        "fertilizer_recommendation_model.pkl"
-    )
-    fertilizer_model = joblib.load(_fert_model_path)
-    print("✅ Fertilizer Model Loaded.")
-
-except Exception as e:
-    print(f"❌ Error loading fertilizer model: {e}")
+    return fertilizer_model
 
 
 # ------------------------------------------------------------
@@ -368,7 +367,9 @@ def predict_yield(data: YieldInput):
 @app.post("/recommend-crop")
 def recommend_crop(data: CropInput):
 
-    if crop_model is None:
+    model = get_crop_model()
+
+    if model is None:
         return {
             "error": "Crop model is not loaded."
         }
@@ -398,7 +399,7 @@ def recommend_crop(data: CropInput):
             ]
         )
 
-        prediction = crop_model.predict(
+        prediction = model.predict(
             features
         )
 
@@ -426,7 +427,9 @@ def recommend_fertilizer(
     data: FertilizerInput
 ):
 
-    if fertilizer_model is None:
+    model = get_fertilizer_model()
+
+    if model is None:
         return {
             "error": "Fertilizer model is not loaded."
         }
@@ -456,7 +459,7 @@ def recommend_fertilizer(
             ]
         )
 
-        prediction = fertilizer_model.predict(
+        prediction = model.predict(
             input_df
         )
 
