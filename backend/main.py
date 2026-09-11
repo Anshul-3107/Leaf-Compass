@@ -139,8 +139,14 @@ def get_yield_model():
     if yield_model is None:
         try:
             model_path = ensure_model_file("yield_prediction_model.pkl")
-            yield_model = joblib.load(model_path)
-            print("✅ Yield Model Loaded into RAM.")
+            loaded = joblib.load(model_path)
+            # Force single-threaded execution to prevent loky from spawning 64 child processes on cloud servers
+            if hasattr(loaded, "named_steps") and "model" in loaded.named_steps:
+                loaded.named_steps["model"].n_jobs = 1
+            elif hasattr(loaded, "n_jobs"):
+                loaded.n_jobs = 1
+            yield_model = loaded
+            print("✅ Yield Model Loaded into RAM (n_jobs=1).")
         except Exception as e:
             print(f"❌ Error loading yield model: {e}")
 
@@ -235,6 +241,14 @@ class ChatInput(BaseModel):
 def ping():
     return {
         "message": "LeafCompass Server is running 🚀"
+    }
+
+
+@app.get("/version")
+def version():
+    return {
+        "version": "v1.2",
+        "models_status": "ready"
     }
 
 
