@@ -10,7 +10,7 @@ from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
-from huggingface_hub import InferenceClient
+from huggingface_hub import InferenceClient, hf_hub_download
 
 # PyTorch for plant disease detection
 import torch
@@ -64,62 +64,82 @@ class_names = {}
 
 
 # ------------------------------------------------------------
-# 1. Plant Disease Model - PyTorch
+# Helpers: On-Demand Model Download & Lazy Loading
+# (Keeps RAM under 250MB for Render Free Tier)
 # ------------------------------------------------------------
 
-try:
-    _disease_model = PlantDiseaseCNN(num_classes=38)
+def ensure_model_file(filename: str) -> str:
+    """Ensure model file exists locally; if missing (e.g. on Render), auto-download from Hugging Face."""
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    models_dir = os.path.join(base_dir, "models")
+    local_path = os.path.join(models_dir, filename)
 
-    _disease_model.load_state_dict(
-        torch.load(
-            "./models/plant_disease_prediction_model.pt",
-            map_location="cpu",
-            weights_only=False
+    if not os.path.exists(local_path):
+        print(f"📥 Model '{filename}' not found locally. Downloading from Hugging Face storage...")
+        token = os.getenv("API")
+        os.makedirs(models_dir, exist_ok=True)
+        hf_hub_download(
+            repo_id="anshularohi/leaf-compass-api",
+            repo_type="space",
+            filename=f"models/{filename}",
+            token=token,
+            local_dir=base_dir,
         )
-    )
-
-    _disease_model.eval()
-
-    disease_model = _disease_model
-
-    with open("./models/class_indices.json", "r") as f:
-        class_indices = json.load(f)
-
-    class_names = {
-        int(k): v for k, v in class_indices.items()
-    }
-
-    print("✅ Disease Model Loaded.")
-
-except FileNotFoundError:
-    print(
-        "❌ plant_disease_prediction_model.pt not found in ./models/. "
-        "Make sure the model is present in Git LFS."
-    )
-
-except Exception as e:
-    print(f"❌ Error loading disease model: {e}")
+        print(f"✅ '{filename}' downloaded successfully.")
+    return local_path
 
 
-# ------------------------------------------------------------
-# 2. Yield Prediction Model
-# ------------------------------------------------------------
+def get_disease_model():
+    """Load PyTorch disease model on-demand to optimize server memory."""
+    global disease_model, class_names
+    if disease_model is None:
+        try:
+            model_path = ensure_model_file("plant_disease_prediction_model.pt")
+            _disease_model = PlantDiseaseCNN(num_classes=38)
+            _disease_model.load_state_dict(
+                torch.load(
+                    model_path,
+                    map_location="cpu",
+                    weights_only=False,
+                )
+            )
+            _disease_model.eval()
+            disease_model = _disease_model
 
-try:
-    yield_model = joblib.load(
-        "./models/yield_prediction_model.pkl"
-    )
+            indices_path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "models",
+                "class_indices.json",
+            )
+            if not os.path.exists(indices_path):
+                ensure_model_file("class_indices.json")
 
-    print("✅ Yield Model Loaded.")
+            with open(indices_path, "r") as f:
+                class_indices = json.load(f)
 
-except FileNotFoundError:
-    print(
-        "❌ yield_prediction_model.pkl not found in ./models/. "
-        "Make sure the model is present in Git LFS."
-    )
+            class_names = {
+                int(k): v for k, v in class_indices.items()
+            }
+            print("✅ Disease Model Loaded into RAM.")
 
-except Exception as e:
-    print(f"❌ Error loading yield model: {e}")
+        except Exception as e:
+            print(f"❌ Error loading disease model: {e}")
+
+    return disease_model, class_names
+
+
+def get_yield_model():
+    """Load Scikit-learn yield model on-demand to optimize server memory."""
+    global yield_model
+    if yield_model is None:
+        try:
+            model_path = ensure_model_file("yield_prediction_model.pkl")
+            yield_model = joblib.load(model_path)
+            print("✅ Yield Model Loaded into RAM.")
+        except Exception as e:
+            print(f"❌ Error loading yield model: {e}")
+
+    return yield_model
 
 
 # ------------------------------------------------------------
@@ -127,16 +147,13 @@ except Exception as e:
 # ------------------------------------------------------------
 
 try:
-    crop_model = joblib.load(
-        "./models/crop_recommendation_model.pkl"
+    _crop_model_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "models",
+        "crop_recommendation_model.pkl"
     )
-
+    crop_model = joblib.load(_crop_model_path)
     print("✅ Crop Model Loaded.")
-
-except FileNotFoundError:
-    print(
-        "❌ crop_recommendation_model.pkl not found in ./models/."
-    )
 
 except Exception as e:
     print(f"❌ Error loading crop model: {e}")
@@ -147,16 +164,13 @@ except Exception as e:
 # ------------------------------------------------------------
 
 try:
-    fertilizer_model = joblib.load(
-        "./models/fertilizer_recommendation_model.pkl"
+    _fert_model_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "models",
+        "fertilizer_recommendation_model.pkl"
     )
-
+    fertilizer_model = joblib.load(_fert_model_path)
     print("✅ Fertilizer Model Loaded.")
-
-except FileNotFoundError:
-    print(
-        "❌ fertilizer_recommendation_model.pkl not found in ./models/."
-    )
 
 except Exception as e:
     print(f"❌ Error loading fertilizer model: {e}")
@@ -248,7 +262,9 @@ async def predict_disease(
     file: UploadFile = File(...)
 ):
 
-    if disease_model is None:
+    model, names = get_disease_model()
+
+    if model is None:
         return {
             "error": "Disease model is not loaded."
         }
@@ -270,7 +286,7 @@ async def predict_disease(
         # Prediction
         with torch.no_grad():
 
-            logits = disease_model(tensor)
+            logits = model(tensor)
 
             probs = torch.softmax(
                 logits,
@@ -286,7 +302,7 @@ async def predict_disease(
             )
 
         return {
-            "class": class_names.get(
+            "class": names.get(
                 predicted_index,
                 "Unknown"
             ),
@@ -311,7 +327,9 @@ async def predict_disease(
 @app.post("/predict-yield")
 def predict_yield(data: YieldInput):
 
-    if yield_model is None:
+    model = get_yield_model()
+
+    if model is None:
         return {
             "error": "Yield model is not loaded."
         }
@@ -322,7 +340,7 @@ def predict_yield(data: YieldInput):
             data.model_dump()
         ])
 
-        prediction = yield_model.predict(
+        prediction = model.predict(
             input_data
         )
 

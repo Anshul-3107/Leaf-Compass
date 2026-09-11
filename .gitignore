@@ -24,3 +24,5 @@ backend/models/yield_prediction_model.pkl
 
 # Heavy dataset (87MB)
 model training/Yield_prediction_Model/cleaned_agricultural_data.csv
+
+deploy_to_space.py
