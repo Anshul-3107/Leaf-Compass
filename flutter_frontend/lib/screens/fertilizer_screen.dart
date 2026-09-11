@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../theme/app_colors.dart';
 import '../widgets/prediction_form.dart';
 
 /// Mirrors Fertilizer.jsx
@@ -29,10 +30,15 @@ class FertilizerScreen extends StatelessWidget {
     ];
 
     return PredictionForm(
-      title: '🧪 Fertilizer Recommendation',
+      title: 'Fertilizer Recommendation',
       fields: fields,
       onSubmit: ApiService.recommendFertilizer,
       resultKey: 'recommended_fertilizer',
+      headerIcon: Icons.water_drop,
+      headerTitle: 'Fertilizer Adviser',
+      headerDescription:
+          'Provide your soil and crop details to get precise nutrient recommendations for optimal growth.',
+      accentColor: AppColors.accentFertilizer,
     );
   }
 }

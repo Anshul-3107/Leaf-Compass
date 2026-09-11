@@ -12,3 +12,15 @@ cleaned_fertilizer_data.csv
 plant_disease_prediction_model.pt
 .env
 .idea/
+# Dataset folders & archives
+plantvillage dataset/
+plantvillage-dataset.zip
+*.zip
+*.tar.gz
+
+# Heavy models (>100MB)
+backend/models/plant_disease_prediction_model.pt
+backend/models/yield_prediction_model.pkl
+
+# Heavy dataset (87MB)
+model training/Yield_prediction_Model/cleaned_agricultural_data.csv

@@ -15,6 +15,9 @@
 	<string>LeafCompass needs photo library access to select leaf images for disease detection.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>LeafCompass may save analysis results to your photo library.</string>
+	<!-- Location for weather data -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>LeafCompass uses your location to show local weather conditions on the home screen.</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

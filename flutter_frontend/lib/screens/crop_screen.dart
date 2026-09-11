@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../theme/app_colors.dart';
 import '../widgets/prediction_form.dart';
 
 /// Mirrors Crop.jsx — all 36 Indian states + soil/nutrient inputs
@@ -31,10 +32,15 @@ class CropScreen extends StatelessWidget {
     ];
 
     return PredictionForm(
-      title: '🌱 Crop Recommendation',
+      title: 'Crop Recommendation',
       fields: fields,
       onSubmit: ApiService.recommendCrop,
       resultKey: 'recommended_crop',
+      headerIcon: Icons.grass,
+      headerTitle: 'Crop Recommendation',
+      headerDescription:
+          'Enter your soil nutrient levels, climate data, and location to find the most suitable crop for your conditions.',
+      accentColor: AppColors.accentCrop,
     );
   }
 }

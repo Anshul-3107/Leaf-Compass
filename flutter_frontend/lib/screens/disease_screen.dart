@@ -1,11 +1,15 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../services/api_service.dart';
-import '../main.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_typography.dart';
+import '../widgets/screen_header.dart';
+import '../widgets/error_banner.dart';
+import '../widgets/result_card.dart';
 
 /// Mirrors Disease.jsx
 /// Allows picking a leaf image and detecting plant disease via /predict-disease
@@ -61,85 +65,101 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('🍃 Disease Detection'),
+        title: const Text('Disease Detection'),
         centerTitle: false,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.screenH),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Image Upload Area
-            GestureDetector(
-              onTap: () => _showImageSourceSheet(context),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                height: 220,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: _image != null ? kAgriGreen : Colors.grey[300]!,
-                    width: _image != null ? 2 : 1.5,
-                    style: BorderStyle.solid,
+            // ── Screen Header ──
+            const ScreenHeader(
+              icon: Icons.biotech,
+              title: 'Plant Disease Detection',
+              description:
+                  'Upload or capture a photo of a leaf to instantly identify diseases using AI-powered analysis.',
+              accentColor: AppColors.accentDisease,
+            ),
+
+            // ── Image Upload Area ──
+            Material(
+              color: AppColors.surfaceContainer,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                onTap: () => _showImageSourceSheet(context),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  height: 220,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                    border: Border.all(
+                      color: _image != null
+                          ? AppColors.primary
+                          : AppColors.surfaceDim,
+                      width: _image != null ? 2 : 1,
+                    ),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    )
-                  ],
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: _image != null
-                    ? Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Image.file(_image!, fit: BoxFit.cover),
-                          Positioned(
-                            top: 8,
-                            right: 8,
-                            child: GestureDetector(
-                              onTap: () => setState(() {
-                                _image = null;
-                                _result = null;
-                                _error = null;
-                              }),
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: Colors.black54,
-                                  borderRadius: BorderRadius.circular(20),
+                  clipBehavior: Clip.antiAlias,
+                  child: _image != null
+                      ? Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Image.file(_image!, fit: BoxFit.cover),
+                            Positioned(
+                              top: AppSpacing.sm,
+                              right: AppSpacing.sm,
+                              child: Material(
+                                color: Colors.black54,
+                                borderRadius:
+                                    BorderRadius.circular(AppSpacing.radiusFull),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(
+                                      AppSpacing.radiusFull),
+                                  onTap: () => setState(() {
+                                    _image = null;
+                                    _result = null;
+                                    _error = null;
+                                  }),
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(6),
+                                    child: Icon(Icons.close,
+                                        color: Colors.white, size: 18),
+                                  ),
                                 ),
-                                child: const Icon(Icons.close,
-                                    color: Colors.white, size: 18),
                               ),
                             ),
-                          ),
-                        ],
-                      )
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.cloud_upload_outlined,
-                              size: 52, color: Colors.grey[400]),
-                          const SizedBox(height: 12),
-                          Text('Tap to upload a leaf photo',
-                              style: GoogleFonts.inter(
-                                  color: Colors.grey[600], fontSize: 14)),
-                          const SizedBox(height: 6),
-                          Text('Gallery or Camera',
-                              style: GoogleFonts.inter(
-                                  color: Colors.grey[400], fontSize: 12)),
-                        ],
-                      ),
+                          ],
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding:
+                                  const EdgeInsets.all(AppSpacing.lg),
+                              decoration: BoxDecoration(
+                                color: AppColors.accentDiseaseLight,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.cloud_upload_outlined,
+                                  size: 36, color: AppColors.accentDisease),
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            Text('Tap to upload a leaf photo',
+                                style: AppTypography.bodyMedium),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text('Gallery or Camera',
+                                style: AppTypography.labelMedium),
+                          ],
+                        ),
+                ),
               ),
             ).animate().fadeIn(delay: 100.ms),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.xl),
 
-            // Analyze Button
+            // ── Analyze Button ──
             ElevatedButton.icon(
               onPressed: (_loading || _image == null) ? null : _analyze,
               icon: _loading
@@ -152,100 +172,28 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
               label: Text(_loading ? 'Scanning...' : 'Analyze Plant'),
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size.fromHeight(50),
-                disabledBackgroundColor: Colors.grey[300],
+                backgroundColor: AppColors.accentDisease,
               ),
             ).animate().fadeIn(delay: 200.ms),
 
-            // Error
+            // ── Error ──
             if (_error != null) ...[
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFEBEE),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.red[200]!),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.error_outline, color: Colors.red),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(_error!,
-                          style: GoogleFonts.inter(
-                              color: Colors.red[700], fontSize: 13)),
-                    ),
-                  ],
-                ),
-              ).animate().fadeIn(),
+              const SizedBox(height: AppSpacing.lg),
+              ErrorBanner(
+                message: _error!,
+                onDismiss: () => setState(() => _error = null),
+              ),
             ],
 
-            // Result
+            // ── Result ──
             if (_result != null) ...[
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFE8F5E9), Color(0xFFF1F8E9)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFA5D6A7)),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.check_circle,
-                            color: kAgriGreen, size: 22),
-                        const SizedBox(width: 8),
-                        Text('Analysis Result',
-                            style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF2E7D32))),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    // Disease name
-                    Text(
-                      _result!['class'] as String? ?? 'Unknown',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.grey[800]),
-                    ),
-                    const SizedBox(height: 8),
-                    // Confidence bar
-                    Builder(builder: (ctx) {
-                      final conf = (_result!['confidence'] as double? ?? 0.0);
-                      return Column(
-                        children: [
-                          Text(
-                            'Confidence: ${(conf * 100).toStringAsFixed(2)}%',
-                            style: GoogleFonts.inter(
-                                color: Colors.grey[600], fontSize: 13),
-                          ),
-                          const SizedBox(height: 8),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(6),
-                            child: LinearProgressIndicator(
-                              value: conf,
-                              minHeight: 8,
-                              backgroundColor: Colors.green[100],
-                              valueColor: const AlwaysStoppedAnimation<Color>(
-                                  kAgriGreen),
-                            ),
-                          ),
-                        ],
-                      );
-                    }),
-                  ],
-                ),
-              ).animate().fadeIn().scale(begin: const Offset(0.97, 0.97)),
+              const SizedBox(height: AppSpacing.xxl),
+              ResultCard(
+                label: 'ANALYSIS RESULT',
+                displayValue: _result!['class'] as String? ?? 'Unknown',
+                confidence: _result!['confidence'] as double? ?? 0.0,
+                accentColor: AppColors.accentDisease,
+              ),
             ],
           ],
         ),
@@ -256,17 +204,22 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
   void _showImageSourceSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (_) => Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Choose Image Source',
-                style: GoogleFonts.inter(
-                    fontSize: 16, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 20),
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceDim,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Text('Choose Image Source', style: AppTypography.titleMedium),
+            const SizedBox(height: AppSpacing.xl),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -288,7 +241,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
           ],
         ),
       ),
@@ -305,22 +258,24 @@ class _SourceOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: kAgriGreenLight,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(icon, color: kAgriGreen, size: 30),
+    return Material(
+      color: AppColors.primaryContainer,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        onTap: onTap,
+        child: Container(
+          width: 80,
+          padding: const EdgeInsets.symmetric(
+              vertical: AppSpacing.lg, horizontal: AppSpacing.sm),
+          child: Column(
+            children: [
+              Icon(icon, color: AppColors.primary, size: 30),
+              const SizedBox(height: AppSpacing.sm),
+              Text(label, style: AppTypography.labelLarge),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(label, style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-        ],
+        ),
       ),
     );
   }

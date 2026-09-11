@@ -38,6 +38,9 @@ dependencies:
   # URL launcher (footer links)
   url_launcher: ^6.3.0
 
+  # Location (GPS for weather)
+  geolocator: ^13.0.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

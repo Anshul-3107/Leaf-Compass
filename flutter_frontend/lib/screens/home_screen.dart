@@ -3,22 +3,18 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:geolocator/geolocator.dart';
 
-import '../main.dart'; // kAgriGreen, kAgriGreenLight, etc.
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_typography.dart';
+import '../models/weather_data.dart';
+import '../services/weather_service.dart';
 
 // ── Home Screen ────────────────────────────────────────────────────────────
 /// Mirrors home.jsx: hero section, dashboard widgets, features grid
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
-
-  // Mock data (same as home.jsx)
-  static const _weatherData = {
-    'temp': '28',
-    'condition': 'Sunny',
-    'humidity': '65',
-    'wind': '12',
-    'location': 'Prayagraj, India',
-  };
 
   static const _marketRates = [
     {'crop': 'Wheat', 'price': '₹2,125/qt', 'trend': 'up'},
@@ -29,67 +25,131 @@ class HomeScreen extends StatelessWidget {
   static const _dailyTip =
       '💡 Tip: Water your crops early in the morning (6–9 AM) to minimize evaporation and prevent fungal diseases.';
 
-  static const _features = [
+  static final _features = [
     {
       'title': 'Disease Detection',
-      'desc': 'Upload a photo of a leaf to detect diseases instantly.',
+      'desc': 'Upload a leaf photo to instantly identify plant diseases with AI.',
       'path': '/disease',
       'icon': Icons.biotech,
-      'color': Color(0xFFFFEBEE),
-      'iconColor': Color(0xFFE53935),
+      'color': AppColors.accentDiseaseLight,
+      'iconColor': AppColors.accentDisease,
     },
     {
       'title': 'Yield Prediction',
-      'desc': 'Estimate crop production based on weather parameters.',
+      'desc': 'Estimate crop production from weather and soil parameters.',
       'path': '/yield',
       'icon': Icons.trending_up,
-      'color': Color(0xFFE3F2FD),
-      'iconColor': Color(0xFF1E88E5),
+      'color': AppColors.accentYieldLight,
+      'iconColor': AppColors.accentYield,
     },
     {
       'title': 'Crop Recommendation',
-      'desc': 'Find the most suitable crop for your soil type.',
+      'desc': 'Find the most suitable crop for your soil conditions.',
       'path': '/crop',
       'icon': Icons.grass,
-      'color': Color(0xFFE8F5E9),
-      'iconColor': Color(0xFF43A047),
+      'color': AppColors.accentCropLight,
+      'iconColor': AppColors.accentCrop,
     },
     {
       'title': 'Fertilizer Adviser',
-      'desc': 'Get nutrient recommendations for healthy growth.',
+      'desc': 'Get precise nutrient recommendations for healthy growth.',
       'path': '/fertilizer',
       'icon': Icons.water_drop,
-      'color': Color(0xFFFFFDE7),
-      'iconColor': Color(0xFFFB8C00),
+      'color': AppColors.accentFertilizerLight,
+      'iconColor': AppColors.accentFertilizer,
     },
     {
       'title': 'AgroBot AI',
-      'desc': 'Chat with our expert AI for instant farming advice.',
+      'desc': 'Chat with our AI expert for instant farming advice.',
       'path': '/chat',
       'icon': Icons.smart_toy,
-      'color': Color(0xFFF3E5F5),
-      'iconColor': Color(0xFF8E24AA),
+      'color': AppColors.accentChatLight,
+      'iconColor': AppColors.accentChat,
     },
   ];
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  WeatherData? _weather;
+  bool _weatherLoading = true;
+  String? _weatherError;
+  bool _permDeniedForever = false;
+  bool _locationDisabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchWeather();
+  }
+
+  Future<void> _fetchWeather() async {
+    setState(() {
+      _weatherLoading = true;
+      _weatherError = null;
+      _permDeniedForever = false;
+      _locationDisabled = false;
+    });
+    try {
+      final data = await WeatherService.fetchCurrentWeather();
+      if (mounted) setState(() { _weather = data; _weatherLoading = false; });
+    } on LocationServiceDisabledException {
+      if (mounted) {
+        setState(() {
+          _weatherLoading = false;
+          _locationDisabled = true;
+          _weatherError = 'Location services are disabled.';
+        });
+      }
+    } on LocationPermissionException catch (e) {
+      if (mounted) {
+        setState(() {
+          _weatherLoading = false;
+          _permDeniedForever = e.isPermanent;
+          _weatherError = e.isPermanent
+              ? 'Location permission permanently denied.'
+              : 'Location permission denied.';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _weatherLoading = false;
+          _weatherError = 'Could not load weather data.';
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final bottomPadding = MediaQuery.of(context).padding.bottom + 16;
+
     return Scaffold(
       body: CustomScrollView(
         slivers: [
           // ── Hero SliverAppBar ──────────────────────────────────────────
           SliverAppBar(
-            expandedHeight: 290,
+            expandedHeight: 280,
             floating: false,
             pinned: true,
-            backgroundColor: kAgriGreen,
+            backgroundColor: AppColors.primary,
             flexibleSpace: FlexibleSpaceBar(
               background: _HeroSection(),
             ),
             title: Row(
               children: [
-                const Icon(Icons.eco, color: Colors.white),
-                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.eco, color: Colors.white, size: 20),
+                ),
+                const SizedBox(width: AppSpacing.sm),
                 Text('LeafCompass',
                     style: GoogleFonts.inter(
                         color: Colors.white, fontWeight: FontWeight.w700)),
@@ -99,19 +159,27 @@ class HomeScreen extends StatelessWidget {
 
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
+              padding: EdgeInsets.fromLTRB(
+                  AppSpacing.screenH, 0, AppSpacing.screenH, bottomPadding),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // ── Dashboard Widgets ──────────────────────────────────
-                  const SizedBox(height: 20),
-                  Text('Dashboard',
-                      style: GoogleFonts.inter(
-                          fontSize: 18, fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 12),
-                  // Weather Card
-                  _WeatherCard(data: _weatherData),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.xl),
+                  Text('Dashboard', style: AppTypography.titleLarge),
+                  const SizedBox(height: AppSpacing.md),
+
+                  // Weather Card (live data)
+                  _WeatherCard(
+                    weather: _weather,
+                    isLoading: _weatherLoading,
+                    error: _weatherError,
+                    permDeniedForever: _permDeniedForever,
+                    locationDisabled: _locationDisabled,
+                    onRetry: _fetchWeather,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+
                   // Tip + Market in a row on wider screens
                   LayoutBuilder(builder: (ctx, constraints) {
                     if (constraints.maxWidth > 500) {
@@ -119,43 +187,40 @@ class HomeScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(child: _TipCard()),
-                          const SizedBox(width: 12),
-                          Expanded(child: _MarketCard(rates: _marketRates)),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(child: _MarketCard(rates: HomeScreen._marketRates)),
                         ],
                       );
                     }
                     return Column(
                       children: [
                         _TipCard(),
-                        const SizedBox(height: 12),
-                        _MarketCard(rates: _marketRates),
+                        const SizedBox(height: AppSpacing.md),
+                        _MarketCard(rates: HomeScreen._marketRates),
                       ],
                     );
                   }),
 
                   // ── Features Grid ──────────────────────────────────────
-                  const SizedBox(height: 28),
-                  Text('Tools & Services',
-                      style: GoogleFonts.inter(
-                          fontSize: 18, fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.xxxl),
+                  Text('Tools & Services', style: AppTypography.titleLarge),
+                  const SizedBox(height: AppSpacing.md),
                   LayoutBuilder(
                     builder: (ctx, constraints) {
                       final width = constraints.maxWidth;
-                      // Use 2 columns on phones, 3 on wider screens
                       final cols = width > 500 ? 3 : 2;
                       return GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        itemCount: _features.length,
+                        itemCount: HomeScreen._features.length,
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: cols,
-                          childAspectRatio: 0.75,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
+                          childAspectRatio: 0.78,
+                          crossAxisSpacing: AppSpacing.md,
+                          mainAxisSpacing: AppSpacing.md,
                         ),
                         itemBuilder: (ctx, i) => _FeatureCard(
-                          feature: _features[i],
+                          feature: HomeScreen._features[i],
                           index: i,
                         ),
                       );
@@ -163,7 +228,7 @@ class HomeScreen extends StatelessWidget {
                   ),
 
                   // ── Footer ─────────────────────────────────────────────
-                  const SizedBox(height: 32),
+                  const SizedBox(height: AppSpacing.xxxl),
                   const _FooterSection(),
                 ],
               ),
@@ -184,12 +249,13 @@ class _HeroSection extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF1B5E20), Color(0xFF2E7D32), Color(0xFF388E3C)],
+          colors: AppColors.heroGradient,
         ),
       ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl, AppSpacing.lg, AppSpacing.xl, AppSpacing.md),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
@@ -197,25 +263,25 @@ class _HeroSection extends StatelessWidget {
               Text(
                 'Welcome to LeafCompass',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
+                style: AppTypography.headline.copyWith(
                   color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
                   letterSpacing: -0.5,
                 ),
               ).animate().fadeIn(delay: 100.ms),
-              const SizedBox(height: 6),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 'Your all-in-one smart farming companion.\nDiagnose crops, predict yields & get expert advice.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
-                    color: Colors.green[100], fontSize: 12, height: 1.4),
+                style: AppTypography.bodySmall.copyWith(
+                  color: Colors.white.withValues(alpha: 0.8),
+                  height: 1.5,
+                ),
               ).animate().fadeIn(delay: 200.ms),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.lg),
               Wrap(
                 alignment: WrapAlignment.center,
-                spacing: 12,
-                runSpacing: 8,
+                spacing: AppSpacing.md,
+                runSpacing: AppSpacing.sm,
                 children: [
                   _HeroButton(
                     label: 'Diagnose Now',
@@ -252,34 +318,36 @@ class _HeroButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.go(path),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-        decoration: BoxDecoration(
-          color: isPrimary ? Colors.white : const Color(0xFF2E7D32),
-          borderRadius: BorderRadius.circular(30),
-          border: isPrimary ? null : Border.all(color: Colors.green[400]!),
-          boxShadow: [
-            if (isPrimary)
-              const BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 8,
-                  offset: Offset(0, 3))
-          ],
-        ),
-        child: Row(
-          children: [
-            Icon(icon,
-                size: 18,
-                color: isPrimary ? kAgriGreen : Colors.white),
-            const SizedBox(width: 6),
-            Text(label,
-                style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w700,
-                    color: isPrimary ? kAgriGreen : Colors.white,
-                    fontSize: 14)),
-          ],
+    return Material(
+      color: isPrimary ? Colors.white : Colors.transparent,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+      elevation: isPrimary ? 4 : 0,
+      shadowColor: Colors.black26,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+        onTap: () => context.go(path),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xl, vertical: AppSpacing.md),
+          decoration: isPrimary
+              ? null
+              : BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                  border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.4)),
+                ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon,
+                  size: 18,
+                  color: isPrimary ? AppColors.primary : Colors.white),
+              const SizedBox(width: AppSpacing.sm),
+              Text(label,
+                  style: AppTypography.labelLarge.copyWith(
+                      color: isPrimary ? AppColors.primary : Colors.white)),
+            ],
+          ),
         ),
       ),
     );
@@ -288,76 +356,256 @@ class _HeroButton extends StatelessWidget {
 
 // ── Weather Card ──────────────────────────────────────────────────────────
 class _WeatherCard extends StatelessWidget {
-  final Map<String, String> data;
-  const _WeatherCard({required this.data});
+  final WeatherData? weather;
+  final bool isLoading;
+  final String? error;
+  final bool permDeniedForever;
+  final bool locationDisabled;
+  final VoidCallback onRetry;
+
+  const _WeatherCard({
+    required this.weather,
+    required this.isLoading,
+    required this.error,
+    required this.permDeniedForever,
+    required this.locationDisabled,
+    required this.onRetry,
+  });
 
   @override
   Widget build(BuildContext context) {
+    // ── Loading state ──
+    if (isLoading) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.cardPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.wb_sunny,
+                      color: AppColors.secondary, size: 16),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text('WEATHER', style: AppTypography.labelSmall),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              // Skeleton placeholders
+              _SkeletonLine(width: 100, height: 28),
+              const SizedBox(height: AppSpacing.sm),
+              _SkeletonLine(width: 180, height: 14),
+              const SizedBox(height: AppSpacing.lg),
+              _SkeletonLine(width: 200, height: 30),
+            ],
+          ),
+        ),
+      ).animate().fadeIn(delay: 100.ms);
+    }
+
+    // ── Error / permission denied state ──
+    if (error != null) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.cardPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.wb_sunny,
+                      color: AppColors.secondary, size: 16),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text('WEATHER', style: AppTypography.labelSmall),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              Row(
+                children: [
+                  Icon(
+                    locationDisabled
+                        ? Icons.location_off
+                        : permDeniedForever
+                            ? Icons.block
+                            : Icons.cloud_off,
+                    color: AppColors.onSurfaceMuted,
+                    size: 28,
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(error!, style: AppTypography.bodyMedium),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          locationDisabled
+                              ? 'Enable location services to see live weather.'
+                              : permDeniedForever
+                                  ? 'Open settings to grant location access.'
+                                  : 'Check your connection and try again.',
+                          style: AppTypography.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    if (locationDisabled) {
+                      await Geolocator.openLocationSettings();
+                    } else if (permDeniedForever) {
+                      await Geolocator.openAppSettings();
+                    } else {
+                      onRetry();
+                    }
+                  },
+                  icon: Icon(
+                    locationDisabled || permDeniedForever
+                        ? Icons.settings
+                        : Icons.refresh,
+                    size: 18,
+                  ),
+                  label: Text(
+                    locationDisabled
+                        ? 'Open Location Settings'
+                        : permDeniedForever
+                            ? 'Open App Settings'
+                            : 'Retry',
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ).animate().fadeIn(delay: 150.ms);
+    }
+
+    // ── Loaded state ──
+    final w = weather!;
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.cardPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.wb_sunny, color: Color(0xFFFB8C00), size: 16),
-                const SizedBox(width: 6),
-                Text('WEATHER',
-                    style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.grey[600],
-                        letterSpacing: 0.8)),
+                Icon(w.weatherIcon,
+                    color: AppColors.secondary, size: 16),
+                const SizedBox(width: AppSpacing.sm),
+                Text('WEATHER', style: AppTypography.labelSmall),
+                const Spacer(),
+                // Live indicator
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.successContainer,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: AppColors.success,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text('Live', style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.success,
+                        fontSize: 10,
+                      )),
+                    ],
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.md),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('${data['temp']}°C',
-                        style: GoogleFonts.inter(
-                            fontSize: 28, fontWeight: FontWeight.w800)),
-                    Text('${data['condition']} • ${data['location']}',
-                        style: GoogleFonts.inter(
-                            fontSize: 12, color: Colors.grey[600])),
+                    Text('${w.temperature}°C',
+                        style: AppTypography.display),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text('${w.condition} • ${w.location}',
+                        style: AppTypography.labelMedium),
                   ],
                 ),
-                const Icon(Icons.wb_sunny,
-                    size: 44, color: Color(0xFFFDD835)),
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: AppColors.secondaryContainer,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  ),
+                  child: Icon(w.weatherIcon,
+                      size: 32, color: AppColors.secondary),
+                ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSpacing.lg),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md, vertical: AppSpacing.sm),
               decoration: BoxDecoration(
-                color: const Color(0xFFE3F2FD),
-                borderRadius: BorderRadius.circular(8),
+                color: AppColors.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.water_drop, size: 14, color: Colors.blueGrey),
-                  const SizedBox(width: 4),
-                  Text('${data['humidity']}% Humidity',
-                      style:
-                          const TextStyle(fontSize: 12, color: Colors.blueGrey)),
-                  const SizedBox(width: 12),
-                  const Icon(Icons.air, size: 14, color: Colors.blueGrey),
-                  const SizedBox(width: 4),
-                  Text('${data['wind']} km/h',
-                      style:
-                          const TextStyle(fontSize: 12, color: Colors.blueGrey)),
+                  Icon(Icons.water_drop,
+                      size: 14, color: AppColors.tertiary),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text('${w.humidity}% Humidity',
+                      style: AppTypography.labelMedium
+                          .copyWith(color: AppColors.onSurfaceVariant)),
+                  const SizedBox(width: AppSpacing.md),
+                  Icon(Icons.air,
+                      size: 14, color: AppColors.tertiary),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text('${w.windSpeed} km/h',
+                      style: AppTypography.labelMedium
+                          .copyWith(color: AppColors.onSurfaceVariant)),
                 ],
               ),
             ),
           ],
         ),
       ),
-    ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.1, end: 0);
+    ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.06, end: 0);
+  }
+}
+
+// ── Skeleton Line (loading placeholder) ───────────────────────────────────
+class _SkeletonLine extends StatelessWidget {
+  final double width;
+  final double height;
+  const _SkeletonLine({required this.width, required this.height});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+      ),
+    )
+        .animate(onPlay: (c) => c.repeat(reverse: true))
+        .shimmer(duration: 1200.ms, color: AppColors.surfaceDim.withValues(alpha: 0.5));
   }
 }
 
@@ -367,56 +615,54 @@ class _TipCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.cardPadding),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: const Border(left: BorderSide(color: Color(0xFFFDD835), width: 4)),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          border: Border(
+              left: BorderSide(color: AppColors.secondary, width: 4)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.calendar_today,
-                    size: 14, color: Color(0xFF43A047)),
-                const SizedBox(width: 6),
-                Text('DAILY TIP',
-                    style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.grey[600],
-                        letterSpacing: 0.8)),
+                Icon(Icons.lightbulb_outline,
+                    size: 14, color: AppColors.secondary),
+                const SizedBox(width: AppSpacing.sm),
+                Text('DAILY TIP', style: AppTypography.labelSmall),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSpacing.md),
             Text(
               HomeScreen._dailyTip,
-              style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontStyle: FontStyle.italic,
-                  color: Colors.grey[800],
-                  height: 1.5),
+              style: AppTypography.bodySmall.copyWith(
+                fontStyle: FontStyle.italic,
+                height: 1.5,
+              ),
             ),
-            const SizedBox(height: 10),
-            GestureDetector(
+            const SizedBox(height: AppSpacing.md),
+            InkWell(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
               onTap: () => context.go('/chat'),
-              child: Row(
-                children: [
-                  Text('Get more tips',
-                      style: GoogleFonts.inter(
-                          color: kAgriGreen,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13)),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.arrow_forward,
-                      size: 14, color: kAgriGreen),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Get more tips',
+                        style: AppTypography.labelLarge
+                            .copyWith(color: AppColors.primary)),
+                    const SizedBox(width: AppSpacing.xs),
+                    const Icon(Icons.arrow_forward,
+                        size: 14, color: AppColors.primary),
+                  ],
+                ),
               ),
             ),
           ],
         ),
       ),
-    ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1, end: 0);
+    ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.06, end: 0);
   }
 }
 
@@ -429,55 +675,48 @@ class _MarketCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.cardPadding),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: const Border(left: BorderSide(color: Color(0xFF43A047), width: 4)),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          border: Border(
+              left: BorderSide(color: AppColors.primary, width: 4)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.trending_up,
-                    size: 14, color: Color(0xFF43A047)),
-                const SizedBox(width: 6),
-                Text('MARKET RATES',
-                    style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.grey[600],
-                        letterSpacing: 0.8)),
+                Icon(Icons.trending_up,
+                    size: 14, color: AppColors.primary),
+                const SizedBox(width: AppSpacing.sm),
+                Text('MARKET RATES', style: AppTypography.labelSmall),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSpacing.md),
             ...rates.map((item) {
               IconData trendIcon = Icons.remove;
-              Color trendColor = Colors.grey;
+              Color trendColor = AppColors.onSurfaceMuted;
               if (item['trend'] == 'up') {
                 trendIcon = Icons.trending_up;
-                trendColor = Colors.green;
+                trendColor = AppColors.success;
               } else if (item['trend'] == 'down') {
                 trendIcon = Icons.trending_down;
-                trendColor = Colors.red;
+                trendColor = AppColors.error;
               }
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 5),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(item['crop']!,
-                        style: GoogleFonts.inter(
-                            fontWeight: FontWeight.w500, fontSize: 13)),
+                    Text(item['crop']!, style: AppTypography.bodyMedium),
                     Row(
                       children: [
                         Text(item['price']!,
-                            style: GoogleFonts.inter(
-                                fontWeight: FontWeight.w700, fontSize: 13)),
-                        const SizedBox(width: 4),
+                            style: AppTypography.labelLarge),
+                        const SizedBox(width: AppSpacing.xs),
                         Icon(trendIcon, size: 14, color: trendColor),
                       ],
-                    )
+                    ),
                   ],
                 ),
               );
@@ -485,7 +724,7 @@ class _MarketCard extends StatelessWidget {
           ],
         ),
       ),
-    ).animate().fadeIn(delay: 250.ms).slideY(begin: 0.1, end: 0);
+    ).animate().fadeIn(delay: 250.ms).slideY(begin: 0.06, end: 0);
   }
 }
 
@@ -497,56 +736,55 @@ class _FeatureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.go(feature['path'] as String),
-      child: Card(
-        elevation: 2,
+    return Card(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        onTap: () => context.go(feature['path'] as String),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            // MainAxisSize.max fills the GridView tile height
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
                   color: feature['color'] as Color,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
                 child: Icon(
                   feature['icon'] as IconData,
                   color: feature['iconColor'] as Color,
-                  size: 20,
+                  size: 22,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.md),
               Text(
                 feature['title'] as String,
-                style: GoogleFonts.inter(
-                    fontSize: 13, fontWeight: FontWeight.w700),
+                style: AppTypography.labelLarge,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.xs),
               Expanded(
                 child: Text(
                   feature['desc'] as String,
-                  style: GoogleFonts.inter(
-                      fontSize: 11, color: Colors.grey[600], height: 1.4),
-                  maxLines: 4,
+                  style: AppTypography.labelMedium.copyWith(
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                  maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
               Row(
                 children: [
-                  Text('Try Tool',
-                      style: GoogleFonts.inter(
-                          color: kAgriGreen,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 11)),
-                  const SizedBox(width: 3),
-                  const Icon(Icons.arrow_forward, size: 11, color: kAgriGreen),
+                  Text('Explore',
+                      style: AppTypography.labelMedium
+                          .copyWith(color: feature['iconColor'] as Color)),
+                  const SizedBox(width: AppSpacing.xs),
+                  Icon(Icons.arrow_forward,
+                      size: 12, color: feature['iconColor'] as Color),
                 ],
               ),
             ],
@@ -556,7 +794,7 @@ class _FeatureCard extends StatelessWidget {
     )
         .animate(delay: Duration(milliseconds: 80 * index))
         .fadeIn()
-        .slideY(begin: 0.12, end: 0);
+        .slideY(begin: 0.08, end: 0);
   }
 }
 
@@ -572,69 +810,68 @@ class _FooterSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
-        color: const Color(0xFF1F2937),
-        borderRadius: BorderRadius.circular(16),
+        color: AppColors.footerBg,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
       ),
       child: Column(
         children: [
           Wrap(
             alignment: WrapAlignment.spaceBetween,
             crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 8,
-            runSpacing: 8,
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('LeafCompass 🌿',
-                      style: GoogleFonts.inter(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16)),
-                  const SizedBox(height: 4),
+                      style: AppTypography.titleMedium
+                          .copyWith(color: Colors.white)),
+                  const SizedBox(height: AppSpacing.xs),
                   Text('Empowering farmers with AI-driven insights.',
-                      style: GoogleFonts.inter(
-                          color: Colors.grey[400], fontSize: 12)),
+                      style: AppTypography.labelMedium
+                          .copyWith(color: AppColors.footerText)),
                 ],
               ),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.code, color: Colors.grey),
+                    icon: Icon(Icons.code, color: AppColors.footerText),
                     onPressed: () => _launch(
                         'https://github.com/Mayukh-Jain/Leaf-Compass'),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.mail_outline, color: Colors.grey),
+                    icon:
+                        Icon(Icons.mail_outline, color: AppColors.footerText),
                     onPressed: () =>
                         _launch('mailto:jainmayukh@gmail.com'),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.phone_outlined, color: Colors.grey),
-                    onPressed: () =>
-                        _launch('tel:+917007535723'),
+                    icon: Icon(Icons.phone_outlined,
+                        color: AppColors.footerText),
+                    onPressed: () => _launch('tel:+917007535723'),
                   ),
                 ],
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          const Divider(color: Color(0xFF374151)),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.md),
+          Divider(color: AppColors.footerText.withValues(alpha: 0.3)),
+          const SizedBox(height: AppSpacing.sm),
           Wrap(
             alignment: WrapAlignment.center,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text('Made with ',
-                  style:
-                      GoogleFonts.inter(color: Colors.grey[400], fontSize: 12)),
-              const Icon(Icons.favorite, color: Colors.red, size: 14),
+                  style: AppTypography.labelMedium
+                      .copyWith(color: AppColors.footerText)),
+              const Icon(Icons.favorite, color: AppColors.error, size: 14),
               Text(' for farmers. © ${DateTime.now().year} | Mayukh Jain',
-                  style:
-                      GoogleFonts.inter(color: Colors.grey[400], fontSize: 12)),
+                  style: AppTypography.labelMedium
+                      .copyWith(color: AppColors.footerText)),
             ],
           ),
         ],

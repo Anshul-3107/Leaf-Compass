@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../theme/app_colors.dart';
 import '../widgets/prediction_form.dart';
 
 /// Mirrors Yield.jsx
@@ -66,11 +67,16 @@ class YieldScreen extends StatelessWidget {
     ];
 
     return PredictionForm(
-      title: '🌾 Crop Yield Prediction',
+      title: 'Yield Prediction',
       fields: fields,
       onSubmit: ApiService.predictYield,
       resultKey: 'predicted_yield',
       unit: 'kg/ha',
+      headerIcon: Icons.trending_up,
+      headerTitle: 'Crop Yield Prediction',
+      headerDescription:
+          'Estimate your expected crop production based on weather, soil, and farming parameters.',
+      accentColor: AppColors.accentYield,
     );
   }
 }

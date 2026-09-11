@@ -32,7 +32,7 @@ print("Training Yield Model...")
 pipeline.fit(X, y)
 
 # 4. Save the model to backend
-target_dir = r"D:\leafcompass\Leaf-Compass\backend\models"
+target_dir = r"D:\Leaf-Compass\backend\models"
 os.makedirs(target_dir, exist_ok=True)
 target_path = os.path.join(target_dir, "yield_prediction_model.pkl")
 

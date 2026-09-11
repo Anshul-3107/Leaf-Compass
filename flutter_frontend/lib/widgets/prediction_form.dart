@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:dio/dio.dart';
 
-import '../main.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_typography.dart';
+import 'error_banner.dart';
+import 'result_card.dart';
+import 'screen_header.dart';
 
 /// Field definition — mirrors the field objects in PredictionForm.jsx
 /// Named PfFormField to avoid collision with Flutter's built-in FormField widget.
@@ -24,7 +28,7 @@ class PfFormField {
 }
 
 /// Reusable prediction form widget — mirrors PredictionForm.jsx
-/// Accepts a list of [FormField] definitions, an [onSubmit] API call,
+/// Accepts a list of [PfFormField] definitions, an [onSubmit] API call,
 /// the [resultKey] to read from the response, and an optional [unit].
 class PredictionForm extends StatefulWidget {
   final String title;
@@ -33,6 +37,12 @@ class PredictionForm extends StatefulWidget {
   final String resultKey;
   final String? unit;
 
+  /// Optional: screen header customization
+  final IconData headerIcon;
+  final String headerTitle;
+  final String headerDescription;
+  final Color accentColor;
+
   const PredictionForm({
     super.key,
     required this.title,
@@ -40,6 +50,10 @@ class PredictionForm extends StatefulWidget {
     required this.onSubmit,
     required this.resultKey,
     this.unit,
+    this.headerIcon = Icons.analytics_outlined,
+    this.headerTitle = '',
+    this.headerDescription = '',
+    this.accentColor = AppColors.primary,
   });
 
   @override
@@ -112,28 +126,37 @@ class _PredictionFormState extends State<PredictionForm> {
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.screenH),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Form fields
+              // ── Screen Header ──
+              if (widget.headerTitle.isNotEmpty)
+                ScreenHeader(
+                  icon: widget.headerIcon,
+                  title: widget.headerTitle,
+                  description: widget.headerDescription,
+                  accentColor: widget.accentColor,
+                ),
+
+              // ── Form fields ──
               ...widget.fields.asMap().entries.map((entry) {
                 final i = entry.key;
                 final field = entry.value;
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 14),
+                  padding: const EdgeInsets.only(bottom: AppSpacing.formFieldGap),
                   child: _buildField(field)
-                      .animate(delay: Duration(milliseconds: 50 * i))
+                      .animate(delay: Duration(milliseconds: 40 * i))
                       .fadeIn()
-                      .slideX(begin: -0.05, end: 0),
+                      .slideX(begin: -0.04, end: 0),
                 );
               }),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
 
-              // Submit Button
+              // ── Submit Button ──
               ElevatedButton.icon(
                 onPressed: _loading ? null : _handleSubmit,
                 icon: _loading
@@ -145,42 +168,24 @@ class _PredictionFormState extends State<PredictionForm> {
                     : const Icon(Icons.analytics_outlined),
                 label: Text(_loading ? 'Calculating...' : 'Predict'),
                 style: ElevatedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(50)),
+                  minimumSize: const Size.fromHeight(50),
+                  backgroundColor: widget.accentColor,
+                ),
               ).animate().fadeIn(delay: 200.ms),
 
-              // Error display
+              // ── Error display ──
               if (_error != null) ...[
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFEBEE),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.red[200]!),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.error_outline, color: Colors.red),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          _error!,
-                          style: GoogleFonts.inter(
-                              color: Colors.red[700], fontSize: 13),
-                        ),
-                      ),
-                    ],
-                  ),
-                ).animate().fadeIn(),
+                const SizedBox(height: AppSpacing.lg),
+                ErrorBanner(
+                  message: _error!,
+                  onDismiss: () => setState(() => _error = null),
+                ),
               ],
 
-              // Result display
+              // ── Result display ──
               if (_result != null) ...[
-                const SizedBox(height: 24),
-                _ResultCard(
-                    result: _result,
-                    resultKey: widget.resultKey,
-                    unit: widget.unit),
+                const SizedBox(height: AppSpacing.xxl),
+                _buildResult(),
               ],
             ],
           ),
@@ -189,18 +194,33 @@ class _PredictionFormState extends State<PredictionForm> {
     );
   }
 
+  Widget _buildResult() {
+    String displayValue;
+    if (_result is Map && (_result as Map).containsKey(widget.resultKey)) {
+      final raw = (_result as Map)[widget.resultKey];
+      if (raw is double) {
+        displayValue = raw.toStringAsFixed(2);
+      } else {
+        displayValue = raw.toString();
+      }
+    } else {
+      displayValue = _result.toString();
+    }
+
+    return ResultCard(
+      displayValue: displayValue,
+      unit: widget.unit,
+      accentColor: widget.accentColor,
+    );
+  }
+
   Widget _buildField(PfFormField field) {
     if (field.type == 'select' && field.options != null) {
       return DropdownButtonFormField<String>(
-        decoration: InputDecoration(
-          labelText: field.label,
-          filled: true,
-          fillColor: const Color(0xFFF5F7F5),
-          border:
-              OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-        ),
+        decoration: InputDecoration(labelText: field.label),
         hint: Text('Select ${field.label}',
-            style: GoogleFonts.inter(fontSize: 13, color: Colors.grey)),
+            style: AppTypography.bodySmall
+                .copyWith(color: AppColors.onSurfaceMuted)),
         items: field.options!
             .map((opt) =>
                 DropdownMenuItem(value: opt, child: Text(opt)))
@@ -224,86 +244,5 @@ class _PredictionFormState extends State<PredictionForm> {
       validator: (val) =>
           (val == null || val.trim().isEmpty) ? 'Required' : null,
     );
-  }
-}
-
-// ── Result Card ─────────────────────────────────────────────────────────────
-class _ResultCard extends StatelessWidget {
-  final dynamic result;
-  final String resultKey;
-  final String? unit;
-
-  const _ResultCard(
-      {required this.result, required this.resultKey, this.unit});
-
-  @override
-  Widget build(BuildContext context) {
-    String displayValue;
-    if (result is Map && (result as Map).containsKey(resultKey)) {
-      final raw = (result as Map)[resultKey];
-      if (raw is double) {
-        displayValue = raw.toStringAsFixed(2);
-      } else {
-        displayValue = raw.toString();
-      }
-    } else {
-      displayValue = result.toString();
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFE8F5E9), Color(0xFFF1F8E9)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFA5D6A7)),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.green.withValues(alpha: 0.1),
-              blurRadius: 12,
-              offset: const Offset(0, 4))
-        ],
-      ),
-      child: Column(
-        children: [
-          Text(
-            'PREDICTION RESULT',
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: Colors.grey[500],
-              letterSpacing: 1.2,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                displayValue,
-                style: GoogleFonts.inter(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w800,
-                  color: kAgriGreen,
-                ),
-              ),
-              if (unit != null) ...[
-                const SizedBox(width: 6),
-                Text(unit!,
-                    style: GoogleFonts.inter(
-                        fontSize: 16,
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w500)),
-              ],
-            ],
-          ),
-        ],
-      ),
-    ).animate().fadeIn().scale(begin: const Offset(0.96, 0.96));
   }
 }

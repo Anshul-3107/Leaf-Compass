@@ -1,6 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Internet access for API calls -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Location for weather data -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <!-- Camera for disease detection image picker -->
     <uses-permission android:name="android.permission.CAMERA"/>
     <!-- Storage for reading images from gallery -->

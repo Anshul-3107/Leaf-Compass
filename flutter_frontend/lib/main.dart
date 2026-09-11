@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+
+import 'theme/app_colors.dart';
+import 'theme/app_spacing.dart';
+import 'theme/app_typography.dart';
+import 'theme/app_theme.dart';
+import 'widgets/chat_bubble.dart';
 
 import 'screens/home_screen.dart';
 import 'screens/disease_screen.dart';
@@ -11,12 +16,6 @@ import 'screens/crop_screen.dart';
 import 'screens/fertilizer_screen.dart';
 import 'screens/chat_screen.dart';
 import 'services/api_service.dart';
-
-// ── Color palette (mirrors Tailwind custom colors in tailwind.config.js) ──
-const Color kAgriGreen = Color(0xFF2E7D32);
-const Color kAgriGreenLight = Color(0xFFE8F5E9);
-const Color kAgriGreenDark = Color(0xFF1B5E20);
-const Color kSurface = Color(0xFFF8FAF8);
 
 // ── Router definition ──────────────────────────────────────────────────────
 final GoRouter _router = GoRouter(
@@ -40,7 +39,7 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
-      statusBarColor: kAgriGreen,
+      statusBarColor: AppColors.primary,
       statusBarIconBrightness: Brightness.light,
     ),
   );
@@ -57,80 +56,7 @@ class LeafCompassApp extends StatelessWidget {
       title: 'LeafCompass',
       debugShowCheckedModeBanner: false,
       routerConfig: _router,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: kAgriGreen,
-          primary: kAgriGreen,
-          secondary: kAgriGreenDark,
-          surface: kSurface,
-        ),
-        textTheme: GoogleFonts.interTextTheme(Theme.of(context).textTheme),
-        scaffoldBackgroundColor: kSurface,
-        appBarTheme: AppBarTheme(
-          backgroundColor: kAgriGreen,
-          foregroundColor: Colors.white,
-          elevation: 2,
-          titleTextStyle: GoogleFonts.inter(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: kAgriGreen,
-            foregroundColor: Colors.white,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-            textStyle: GoogleFonts.inter(
-              fontWeight: FontWeight.w700,
-              fontSize: 15,
-            ),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: const Color(0xFFF5F7F5),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Color(0xFFDDE0DD)),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Color(0xFFDDE0DD)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: kAgriGreen, width: 2),
-          ),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          labelStyle: const TextStyle(color: Color(0xFF555555)),
-        ),
-        cardTheme: CardThemeData(
-          color: Colors.white,
-          elevation: 3,
-          shadowColor: Colors.black12,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          margin: const EdgeInsets.symmetric(vertical: 6),
-        ),
-        navigationBarTheme: NavigationBarThemeData(
-          backgroundColor: Colors.white,
-          indicatorColor: kAgriGreenLight,
-          labelTextStyle: WidgetStateProperty.resolveWith((states) {
-            if (states.contains(WidgetState.selected)) {
-              return GoogleFonts.inter(
-                  fontWeight: FontWeight.w600, color: kAgriGreen, fontSize: 12);
-            }
-            return GoogleFonts.inter(fontSize: 11, color: Colors.grey[600]);
-          }),
-        ),
-      ),
+      theme: AppTheme.light,
     );
   }
 }
@@ -147,23 +73,20 @@ class _AppShell extends StatefulWidget {
 class _AppShellState extends State<_AppShell> {
   bool _chatbotOpen = false;
 
-  // Nav items mirroring Header.jsx navItems
+  // 5 nav items (AI Chat removed — accessible via floating FAB)
   static const _navItems = [
-    (label: 'Home',       icon: Icons.home_outlined,      active: Icons.home,             path: '/'),
-    (label: 'Disease',    icon: Icons.biotech_outlined,   active: Icons.biotech,          path: '/disease'),
-    (label: 'Yield',      icon: Icons.trending_up_outlined,active: Icons.trending_up,     path: '/yield'),
-    (label: 'Crop',       icon: Icons.grass_outlined,     active: Icons.grass,            path: '/crop'),
-    (label: 'Fertilizer', icon: Icons.water_drop_outlined,active: Icons.water_drop,       path: '/fertilizer'),
-    (label: 'AI Chat',    icon: Icons.smart_toy_outlined, active: Icons.smart_toy,        path: '/chat'),
+    (label: 'Home',       icon: Icons.home_outlined,       active: Icons.home,        path: '/'),
+    (label: 'Disease',    icon: Icons.biotech_outlined,    active: Icons.biotech,     path: '/disease'),
+    (label: 'Yield',      icon: Icons.trending_up_outlined,active: Icons.trending_up, path: '/yield'),
+    (label: 'Crop',       icon: Icons.grass_outlined,      active: Icons.grass,       path: '/crop'),
+    (label: 'Fertilizer', icon: Icons.water_drop_outlined, active: Icons.water_drop,  path: '/fertilizer'),
   ];
 
   int _currentIndex(BuildContext context) {
     final loc = GoRouterState.of(context).uri.toString();
-    // Exact match first
     for (int i = 0; i < _navItems.length; i++) {
       if (_navItems[i].path == loc) return i;
     }
-    // Prefix match fallback
     for (int i = _navItems.length - 1; i >= 0; i--) {
       if (loc.startsWith(_navItems[i].path) && _navItems[i].path != '/') {
         return i;
@@ -184,27 +107,31 @@ class _AppShellState extends State<_AppShell> {
           ),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex(context),
-        onDestinationSelected: (i) {
-          if (_navItems[i].path == '/chat') {
-            setState(() => _chatbotOpen = false);
-          }
-          context.go(_navItems[i].path);
-        },
-        destinations: _navItems.map((item) {
-          return NavigationDestination(
-            icon: Icon(item.icon),
-            selectedIcon: Icon(item.active, color: kAgriGreen),
-            label: item.label,
-          );
-        }).toList(),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(color: AppColors.surfaceDim, width: 1),
+          ),
+        ),
+        child: NavigationBar(
+          selectedIndex: _currentIndex(context),
+          onDestinationSelected: (i) {
+            context.go(_navItems[i].path);
+          },
+          destinations: _navItems.map((item) {
+            return NavigationDestination(
+              icon: Icon(item.icon),
+              selectedIcon: Icon(item.active, color: AppColors.primary),
+              label: item.label,
+            );
+          }).toList(),
+        ),
       ),
     );
   }
 }
 
-// ── Floating AgroBot Widget (mirrors Chatbot.jsx) ─────────────────────────
+// ── Floating AgroBot Widget ───────────────────────────────────────────────
 class _FloatingChatbot extends StatefulWidget {
   final bool isOpen;
   final VoidCallback onToggle;
@@ -264,137 +191,160 @@ class _FloatingChatbotState extends State<_FloatingChatbot> {
         crossAxisAlignment: CrossAxisAlignment.end,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Chat Panel
+          // ── Chat Panel ──
           if (widget.isOpen)
             Container(
-              width: 300,
-              height: 360,
+              width: 320,
+              height: 400,
               margin: const EdgeInsets.only(bottom: 10),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: kAgriGreenLight),
+                color: AppColors.surfaceContainer,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+                border: Border.all(color: AppColors.surfaceDim),
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.18),
+                      color: Colors.black.withValues(alpha: 0.15),
                       blurRadius: 24,
-                      offset: const Offset(0, 8))
+                      offset: const Offset(0, 8)),
                 ],
               ),
               child: Column(
                 children: [
-                  // Header bar
+                  // ── Header bar ──
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 10),
-                    decoration: const BoxDecoration(
-                      color: kAgriGreen,
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(20)),
+                        horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [AppColors.primaryDark, AppColors.primary],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                      borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(AppSpacing.radiusXl)),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.smart_toy,
-                            color: Colors.white, size: 18),
-                        const SizedBox(width: 8),
-                        const Expanded(
-                          child: Text('AgroBot 🤖',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14)),
-                        ),
-                        GestureDetector(
-                          onTap: widget.onToggle,
-                          child: const Icon(Icons.close,
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.smart_toy,
                               color: Colors.white, size: 18),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('AgroBot',
+                                  style: AppTypography.labelLarge
+                                      .copyWith(color: Colors.white)),
+                              Text('AI Farming Assistant',
+                                  style: AppTypography.labelSmall.copyWith(
+                                      color: Colors.white.withValues(alpha: 0.7),
+                                      letterSpacing: 0)),
+                            ],
+                          ),
+                        ),
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(20),
+                            onTap: widget.onToggle,
+                            child: const Padding(
+                              padding: EdgeInsets.all(4),
+                              child: Icon(Icons.close,
+                                  color: Colors.white, size: 18),
+                            ),
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  // Messages
+
+                  // ── Messages ──
                   Expanded(
                     child: Container(
-                      color: const Color(0xFFF5F5F5),
+                      color: AppColors.surface,
                       child: ListView.builder(
                         controller: _scroll,
-                        padding: const EdgeInsets.all(10),
+                        padding: const EdgeInsets.all(AppSpacing.md),
                         itemCount: _msgs.length + (_loading ? 1 : 0),
                         itemBuilder: (_, i) {
                           if (_loading && i == _msgs.length) {
-                            return const Padding(
-                              padding: EdgeInsets.only(top: 4),
-                              child: Text('AgroBot is typing...',
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      fontStyle: FontStyle.italic,
-                                      color: Colors.grey)),
-                            );
+                            return const ChatTypingIndicator(showAvatar: false);
                           }
                           final m = _msgs[i];
                           final isUser = m['s'] == 'user';
-                          return Align(
-                            alignment: isUser
-                                ? Alignment.centerRight
-                                : Alignment.centerLeft,
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(vertical: 3),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 7),
-                              constraints: const BoxConstraints(maxWidth: 210),
-                              decoration: BoxDecoration(
-                                color: isUser
-                                    ? kAgriGreen
-                                    : const Color(0xFFDFDFDF),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(m['t']!,
-                                  style: TextStyle(
-                                      fontSize: 12,
-                                      color: isUser
-                                          ? Colors.white
-                                          : Colors.black87)),
-                            ),
+                          return ChatBubble(
+                            text: m['t']!,
+                            isUser: isUser,
+                            index: i,
+                            showAvatar: false,
                           );
                         },
                       ),
                     ),
                   ),
-                  // Input row
+
+                  // ── Input row ──
                   Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius:
-                          BorderRadius.vertical(bottom: Radius.circular(20)),
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceContainer,
+                      borderRadius: const BorderRadius.vertical(
+                          bottom: Radius.circular(AppSpacing.radiusXl)),
+                      border: Border(
+                        top: BorderSide(color: AppColors.surfaceDim),
+                      ),
                     ),
                     child: Row(
                       children: [
                         Expanded(
                           child: TextField(
                             controller: _ctrl,
-                            style: const TextStyle(fontSize: 12),
+                            style: AppTypography.bodySmall,
                             decoration: InputDecoration(
                               hintText: 'Ask about crops...',
-                              hintStyle: const TextStyle(fontSize: 12),
+                              hintStyle: AppTypography.bodySmall.copyWith(
+                                  color: AppColors.onSurfaceMuted),
                               contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 6),
+                                  horizontal: AppSpacing.md, vertical: AppSpacing.sm),
                               isDense: true,
+                              filled: true,
+                              fillColor: AppColors.surfaceContainerHigh,
                               border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(20)),
+                                  borderRadius:
+                                      BorderRadius.circular(AppSpacing.radiusFull),
+                                  borderSide: BorderSide.none),
+                              enabledBorder: OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(AppSpacing.radiusFull),
+                                  borderSide: BorderSide.none),
+                              focusedBorder: OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(AppSpacing.radiusFull),
+                                  borderSide: const BorderSide(
+                                      color: AppColors.primary, width: 1.5)),
                             ),
                             onSubmitted: (_) => _send(),
                           ),
                         ),
-                        const SizedBox(width: 6),
-                        GestureDetector(
-                          onTap: _send,
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: const BoxDecoration(
-                                color: kAgriGreen, shape: BoxShape.circle),
-                            child: const Icon(Icons.send,
-                                color: Colors.white, size: 16),
+                        const SizedBox(width: AppSpacing.sm),
+                        Material(
+                          color: AppColors.primary,
+                          shape: const CircleBorder(),
+                          child: InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: _send,
+                            child: const Padding(
+                              padding: EdgeInsets.all(10),
+                              child: Icon(Icons.send,
+                                  color: Colors.white, size: 16),
+                            ),
                           ),
                         ),
                       ],
@@ -404,29 +354,31 @@ class _FloatingChatbotState extends State<_FloatingChatbot> {
               ),
             )
                 .animate()
-                .fadeIn(duration: 180.ms)
-                .slideY(begin: 0.08, end: 0, duration: 180.ms),
+                .fadeIn(duration: 200.ms)
+                .slideY(begin: 0.06, end: 0, duration: 200.ms),
 
-          // FAB
-          GestureDetector(
-            onTap: widget.onToggle,
-            child: Container(
-              width: 54,
-              height: 54,
-              decoration: BoxDecoration(
-                color: kAgriGreen,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                      color: kAgriGreen.withValues(alpha: 0.4),
-                      blurRadius: 14,
-                      offset: const Offset(0, 4))
-                ],
-              ),
-              child: Icon(
-                widget.isOpen ? Icons.close : Icons.chat_bubble,
-                color: Colors.white,
-                size: 24,
+          // ── FAB ──
+          Material(
+            color: AppColors.secondary,
+            shape: const CircleBorder(),
+            elevation: 6,
+            shadowColor: AppColors.secondary.withValues(alpha: 0.4),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: widget.onToggle,
+              child: Container(
+                width: 56,
+                height: 56,
+                alignment: Alignment.center,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    widget.isOpen ? Icons.close : Icons.chat_bubble_rounded,
+                    key: ValueKey(widget.isOpen),
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
               ),
             ),
           ),
