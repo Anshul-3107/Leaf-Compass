@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors_extension.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
@@ -17,7 +17,7 @@ class ResultCard extends StatelessWidget {
   final String label;
 
   /// Optional accent color for the left edge and value text.
-  final Color accentColor;
+  final Color? accentColor;
 
   /// Optional subtitle below the value.
   final String? subtitle;
@@ -30,7 +30,7 @@ class ResultCard extends StatelessWidget {
     required this.displayValue,
     this.unit,
     this.label = 'PREDICTION RESULT',
-    this.accentColor = AppColors.primary,
+    this.accentColor,
     this.subtitle,
     this.confidence,
   });
@@ -40,12 +40,12 @@ class ResultCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xxl),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
+        color: context.themeColors.surfaceContainer,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: AppColors.surfaceDim),
+        border: Border.all(color: context.themeColors.surfaceDim),
         boxShadow: [
           BoxShadow(
-            color: accentColor.withValues(alpha: 0.08),
+            color: (accentColor ?? context.themeColors.primary).withValues(alpha: 0.08),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -60,7 +60,7 @@ class ResultCard extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(2),
               gradient: LinearGradient(
-                colors: [accentColor, accentColor.withValues(alpha: 0.3)],
+                colors: [accentColor ?? context.themeColors.primary, (accentColor ?? context.themeColors.primary).withValues(alpha: 0.3)],
               ),
             ),
           ),
@@ -70,12 +70,12 @@ class ResultCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.check_circle_outline,
-                  size: 16, color: accentColor),
+                  size: 16, color: accentColor ?? context.themeColors.primary),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 label,
-                style: AppTypography.labelSmall.copyWith(
-                  color: AppColors.onSurfaceMuted,
+                style: context.labelSmall.copyWith(
+                  color: context.themeColors.onSurfaceMuted,
                 ),
               ),
             ],
@@ -92,8 +92,8 @@ class ResultCard extends StatelessWidget {
                 child: Text(
                   displayValue,
                   textAlign: TextAlign.center,
-                  style: AppTypography.display.copyWith(
-                    color: accentColor,
+                  style: context.display.copyWith(
+                    color: accentColor ?? context.themeColors.primary,
                     fontSize: 30,
                   ),
                 ),
@@ -102,8 +102,8 @@ class ResultCard extends StatelessWidget {
                 const SizedBox(width: AppSpacing.sm),
                 Text(
                   unit!,
-                  style: AppTypography.titleMedium.copyWith(
-                    color: AppColors.onSurfaceVariant,
+                  style: context.titleMedium.copyWith(
+                    color: context.themeColors.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -116,7 +116,7 @@ class ResultCard extends StatelessWidget {
             Text(
               subtitle!,
               textAlign: TextAlign.center,
-              style: AppTypography.bodySmall,
+              style: context.bodySmall,
             ),
           ],
 
@@ -125,7 +125,7 @@ class ResultCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.lg),
             Text(
               'Confidence: ${(confidence! * 100).toStringAsFixed(1)}%',
-              style: AppTypography.labelMedium,
+              style: context.labelMedium,
             ),
             const SizedBox(height: AppSpacing.sm),
             ClipRRect(
@@ -133,8 +133,8 @@ class ResultCard extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: confidence!,
                 minHeight: 8,
-                backgroundColor: AppColors.surfaceContainerHigh,
-                valueColor: AlwaysStoppedAnimation<Color>(accentColor),
+                backgroundColor: context.themeColors.surfaceContainerHigh,
+                valueColor: AlwaysStoppedAnimation<Color>(accentColor ?? context.themeColors.primary),
               ),
             ),
           ],

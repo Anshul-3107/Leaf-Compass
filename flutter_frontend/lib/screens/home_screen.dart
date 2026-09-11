@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors_extension.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:geolocator/geolocator.dart';
 
-import '../theme/app_colors.dart';
+
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
+import '../theme/theme_provider.dart';
+import 'package:provider/provider.dart';
 import '../models/weather_data.dart';
 import '../services/weather_service.dart';
 
@@ -29,48 +32,50 @@ class HomeScreen extends StatefulWidget {
     '💡 Tip: Prune dead or diseased foliage promptly to improve air circulation and direct energy to healthy growth.',
   ];
 
-  static final _features = [
+  static List<Map<String, dynamic>> _getFeatures(BuildContext context) {
+    return [
     {
       'title': 'Disease Detection',
       'desc': 'Upload a leaf photo to instantly identify plant diseases with AI.',
       'path': '/disease',
       'icon': Icons.biotech,
-      'color': AppColors.accentDiseaseLight,
-      'iconColor': AppColors.accentDisease,
+      'color': context.themeColors.accentDiseaseLight,
+      'iconColor': context.themeColors.accentDisease,
     },
     {
       'title': 'Yield Prediction',
       'desc': 'Estimate crop production from weather and soil parameters.',
       'path': '/yield',
       'icon': Icons.trending_up,
-      'color': AppColors.accentYieldLight,
-      'iconColor': AppColors.accentYield,
+      'color': context.themeColors.accentYieldLight,
+      'iconColor': context.themeColors.accentYield,
     },
     {
       'title': 'Crop Recommendation',
       'desc': 'Find the most suitable crop for your soil conditions.',
       'path': '/crop',
       'icon': Icons.grass,
-      'color': AppColors.accentCropLight,
-      'iconColor': AppColors.accentCrop,
+      'color': context.themeColors.accentCropLight,
+      'iconColor': context.themeColors.accentCrop,
     },
     {
       'title': 'Fertilizer Adviser',
       'desc': 'Get precise nutrient recommendations for healthy growth.',
       'path': '/fertilizer',
       'icon': Icons.water_drop,
-      'color': AppColors.accentFertilizerLight,
-      'iconColor': AppColors.accentFertilizer,
+      'color': context.themeColors.accentFertilizerLight,
+      'iconColor': context.themeColors.accentFertilizer,
     },
     {
       'title': 'AgroBot AI',
       'desc': 'Chat with our AI expert for instant farming advice.',
       'path': '/chat',
       'icon': Icons.smart_toy,
-      'color': AppColors.accentChatLight,
-      'iconColor': AppColors.accentChat,
+      'color': context.themeColors.accentChatLight,
+      'iconColor': context.themeColors.accentChat,
     },
-  ];
+    ];
+  }
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -142,7 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
             expandedHeight: 280,
             floating: false,
             pinned: true,
-            backgroundColor: AppColors.primary,
+            backgroundColor: context.themeColors.primary,
             flexibleSpace: FlexibleSpaceBar(
               background: _HeroSection(),
             ),
@@ -162,6 +167,49 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: Colors.white, fontWeight: FontWeight.w700)),
               ],
             ),
+            actions: [
+              PopupMenuButton<ThemeMode>(
+                icon: const Icon(Icons.brightness_6, color: Colors.white),
+                onSelected: (mode) {
+                  Provider.of<ThemeProvider>(context, listen: false).setThemeMode(mode);
+                },
+                itemBuilder: (context) {
+                  final current = Provider.of<ThemeProvider>(context, listen: false).themeMode;
+                  return [
+                    PopupMenuItem(
+                      value: ThemeMode.light,
+                      child: Row(
+                        children: [
+                          Icon(Icons.light_mode, size: 18, color: current == ThemeMode.light ? context.themeColors.primary : context.themeColors.onSurface),
+                          const SizedBox(width: 8),
+                          Text('Light', style: context.bodyMedium),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: ThemeMode.dark,
+                      child: Row(
+                        children: [
+                          Icon(Icons.dark_mode, size: 18, color: current == ThemeMode.dark ? context.themeColors.primary : context.themeColors.onSurface),
+                          const SizedBox(width: 8),
+                          Text('Dark', style: context.bodyMedium),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: ThemeMode.system,
+                      child: Row(
+                        children: [
+                          Icon(Icons.settings_system_daydream, size: 18, color: current == ThemeMode.system ? context.themeColors.primary : context.themeColors.onSurface),
+                          const SizedBox(width: 8),
+                          Text('System', style: context.bodyMedium),
+                        ],
+                      ),
+                    ),
+                  ];
+                },
+              ),
+            ],
           ),
 
           SliverToBoxAdapter(
@@ -173,7 +221,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   // ── Dashboard Widgets ──────────────────────────────────
                   const SizedBox(height: AppSpacing.xl),
-                  Text('Dashboard', style: AppTypography.titleLarge),
+                  Text('Dashboard', style: context.titleLarge),
                   const SizedBox(height: AppSpacing.md),
 
                   // Weather Card (live data)
@@ -191,7 +239,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   // ── Features Grid ──────────────────────────────────────
                   const SizedBox(height: AppSpacing.xxxl),
-                  Text('Tools & Services', style: AppTypography.titleLarge),
+                  Text('Tools & Services', style: context.titleLarge),
                   const SizedBox(height: AppSpacing.md),
                   LayoutBuilder(
                     builder: (ctx, constraints) {
@@ -200,7 +248,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       return GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        itemCount: HomeScreen._features.length,
+                        itemCount: HomeScreen._getFeatures(context).length,
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: cols,
                           childAspectRatio: 0.78,
@@ -208,7 +256,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           mainAxisSpacing: AppSpacing.md,
                         ),
                         itemBuilder: (ctx, i) => _FeatureCard(
-                          feature: HomeScreen._features[i],
+                          feature: HomeScreen._getFeatures(context)[i],
                           index: i,
                         ),
                       );
@@ -233,11 +281,11 @@ class _HeroSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: AppColors.heroGradient,
+          colors: context.themeColors.heroGradient,
         ),
       ),
       child: SafeArea(
@@ -251,7 +299,7 @@ class _HeroSection extends StatelessWidget {
               Text(
                 'Welcome to LeafCompass',
                 textAlign: TextAlign.center,
-                style: AppTypography.headline.copyWith(
+                style: context.headline.copyWith(
                   color: Colors.white,
                   letterSpacing: -0.5,
                 ),
@@ -260,7 +308,7 @@ class _HeroSection extends StatelessWidget {
               Text(
                 'Your all-in-one smart farming companion.\nDiagnose crops, predict yields & get expert advice.',
                 textAlign: TextAlign.center,
-                style: AppTypography.bodySmall.copyWith(
+                style: context.bodySmall.copyWith(
                   color: Colors.white.withValues(alpha: 0.8),
                   height: 1.5,
                 ),
@@ -329,11 +377,11 @@ class _HeroButton extends StatelessWidget {
             children: [
               Icon(icon,
                   size: 18,
-                  color: isPrimary ? AppColors.primary : Colors.white),
+                  color: isPrimary ? context.themeColors.primary : Colors.white),
               const SizedBox(width: AppSpacing.sm),
               Text(label,
-                  style: AppTypography.labelLarge.copyWith(
-                      color: isPrimary ? AppColors.primary : Colors.white)),
+                  style: context.labelLarge.copyWith(
+                      color: isPrimary ? context.themeColors.primary : Colors.white)),
             ],
           ),
         ),
@@ -372,10 +420,10 @@ class _WeatherCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.wb_sunny,
-                      color: AppColors.secondary, size: 16),
+                  Icon(Icons.wb_sunny,
+                      color: context.themeColors.secondary, size: 16),
                   const SizedBox(width: AppSpacing.sm),
-                  Text('WEATHER', style: AppTypography.labelSmall),
+                  Text('WEATHER', style: context.labelSmall),
                 ],
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -401,10 +449,10 @@ class _WeatherCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.wb_sunny,
-                      color: AppColors.secondary, size: 16),
+                  Icon(Icons.wb_sunny,
+                      color: context.themeColors.secondary, size: 16),
                   const SizedBox(width: AppSpacing.sm),
-                  Text('WEATHER', style: AppTypography.labelSmall),
+                  Text('WEATHER', style: context.labelSmall),
                 ],
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -416,7 +464,7 @@ class _WeatherCard extends StatelessWidget {
                         : permDeniedForever
                             ? Icons.block
                             : Icons.cloud_off,
-                    color: AppColors.onSurfaceMuted,
+                    color: context.themeColors.onSurfaceMuted,
                     size: 28,
                   ),
                   const SizedBox(width: AppSpacing.md),
@@ -424,7 +472,7 @@ class _WeatherCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(error!, style: AppTypography.bodyMedium),
+                        Text(error!, style: context.bodyMedium),
                         const SizedBox(height: AppSpacing.xs),
                         Text(
                           locationDisabled
@@ -432,7 +480,7 @@ class _WeatherCard extends StatelessWidget {
                               : permDeniedForever
                                   ? 'Open settings to grant location access.'
                                   : 'Check your connection and try again.',
-                          style: AppTypography.bodySmall,
+                          style: context.bodySmall,
                         ),
                       ],
                     ),
@@ -484,16 +532,16 @@ class _WeatherCard extends StatelessWidget {
             Row(
               children: [
                 Icon(w.weatherIcon,
-                    color: AppColors.secondary, size: 16),
+                    color: context.themeColors.secondary, size: 16),
                 const SizedBox(width: AppSpacing.sm),
-                Text('WEATHER', style: AppTypography.labelSmall),
+                Text('WEATHER', style: context.labelSmall),
                 const Spacer(),
                 // Live indicator
                 Container(
                   padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.sm, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppColors.successContainer,
+                    color: context.themeColors.successContainer,
                     borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
                   ),
                   child: Row(
@@ -502,14 +550,14 @@ class _WeatherCard extends StatelessWidget {
                       Container(
                         width: 6,
                         height: 6,
-                        decoration: const BoxDecoration(
-                          color: AppColors.success,
+                        decoration: BoxDecoration(
+                          color: context.themeColors.success,
                           shape: BoxShape.circle,
                         ),
                       ),
                       const SizedBox(width: 4),
-                      Text('Live', style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.success,
+                      Text('Live', style: context.labelSmall.copyWith(
+                        color: context.themeColors.success,
                         fontSize: 10,
                       )),
                     ],
@@ -525,20 +573,20 @@ class _WeatherCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('${w.temperature}°C',
-                        style: AppTypography.display),
+                        style: context.display),
                     const SizedBox(height: AppSpacing.xs),
                     Text('${w.condition} • ${w.location}',
-                        style: AppTypography.labelMedium),
+                        style: context.labelMedium),
                   ],
                 ),
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
-                    color: AppColors.secondaryContainer,
+                    color: context.themeColors.secondaryContainer,
                     borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                   ),
                   child: Icon(w.weatherIcon,
-                      size: 32, color: AppColors.secondary),
+                      size: 32, color: context.themeColors.secondary),
                 ),
               ],
             ),
@@ -547,25 +595,25 @@ class _WeatherCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.md, vertical: AppSpacing.sm),
               decoration: BoxDecoration(
-                color: AppColors.surfaceContainerHigh,
+                color: context.themeColors.surfaceContainerHigh,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.water_drop,
-                      size: 14, color: AppColors.tertiary),
+                      size: 14, color: context.themeColors.tertiary),
                   const SizedBox(width: AppSpacing.xs),
                   Text('${w.humidity}% Humidity',
-                      style: AppTypography.labelMedium
-                          .copyWith(color: AppColors.onSurfaceVariant)),
+                      style: context.labelMedium
+                          .copyWith(color: context.themeColors.onSurfaceVariant)),
                   const SizedBox(width: AppSpacing.md),
                   Icon(Icons.air,
-                      size: 14, color: AppColors.tertiary),
+                      size: 14, color: context.themeColors.tertiary),
                   const SizedBox(width: AppSpacing.xs),
                   Text('${w.windSpeed} km/h',
-                      style: AppTypography.labelMedium
-                          .copyWith(color: AppColors.onSurfaceVariant)),
+                      style: context.labelMedium
+                          .copyWith(color: context.themeColors.onSurfaceVariant)),
                 ],
               ),
             ),
@@ -588,12 +636,12 @@ class _SkeletonLine extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerHigh,
+        color: context.themeColors.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
       ),
     )
         .animate(onPlay: (c) => c.repeat(reverse: true))
-        .shimmer(duration: 1200.ms, color: AppColors.surfaceDim.withValues(alpha: 0.5));
+        .shimmer(duration: 1200.ms, color: context.themeColors.surfaceDim.withValues(alpha: 0.5));
   }
 }
 
@@ -611,7 +659,7 @@ class _TipCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
           border: Border(
-              left: BorderSide(color: AppColors.secondary, width: 4)),
+              left: BorderSide(color: context.themeColors.secondary, width: 4)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -619,15 +667,15 @@ class _TipCard extends StatelessWidget {
             Row(
               children: [
                 Icon(Icons.lightbulb_outline,
-                    size: 14, color: AppColors.secondary),
+                    size: 14, color: context.themeColors.secondary),
                 const SizedBox(width: AppSpacing.sm),
-                Text('DAILY TIP', style: AppTypography.labelSmall),
+                Text('DAILY TIP', style: context.labelSmall),
               ],
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
               tip,
-              style: AppTypography.bodySmall.copyWith(
+              style: context.bodySmall.copyWith(
                 fontStyle: FontStyle.italic,
                 height: 1.5,
               ),
@@ -642,11 +690,11 @@ class _TipCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text('Get more tips',
-                        style: AppTypography.labelLarge
-                            .copyWith(color: AppColors.primary)),
+                        style: context.labelLarge
+                            .copyWith(color: context.themeColors.primary)),
                     const SizedBox(width: AppSpacing.xs),
-                    const Icon(Icons.arrow_forward,
-                        size: 14, color: AppColors.primary),
+                    Icon(Icons.arrow_forward,
+                        size: 14, color: context.themeColors.primary),
                   ],
                 ),
               ),
@@ -691,7 +739,7 @@ class _FeatureCard extends StatelessWidget {
               const SizedBox(height: AppSpacing.md),
               Text(
                 feature['title'] as String,
-                style: AppTypography.labelLarge,
+                style: context.labelLarge,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -699,9 +747,9 @@ class _FeatureCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   feature['desc'] as String,
-                  style: AppTypography.labelMedium.copyWith(
+                  style: context.labelMedium.copyWith(
                     fontWeight: FontWeight.w400,
-                    color: AppColors.onSurfaceVariant,
+                    color: context.themeColors.onSurfaceVariant,
                   ),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
@@ -710,7 +758,7 @@ class _FeatureCard extends StatelessWidget {
               Row(
                 children: [
                   Text('Explore',
-                      style: AppTypography.labelMedium
+                      style: context.labelMedium
                           .copyWith(color: feature['iconColor'] as Color)),
                   const SizedBox(width: AppSpacing.xs),
                   Icon(Icons.arrow_forward,
@@ -742,7 +790,7 @@ class _FooterSection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
-        color: AppColors.footerBg,
+        color: context.themeColors.footerBg,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
       ),
       child: Column(
@@ -757,31 +805,31 @@ class _FooterSection extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('LeafCompass 🌿',
-                      style: AppTypography.titleMedium
+                      style: context.titleMedium
                           .copyWith(color: Colors.white)),
                   const SizedBox(height: AppSpacing.xs),
                   Text('Empowering farmers with AI-driven insights.',
-                      style: AppTypography.labelMedium
-                          .copyWith(color: AppColors.footerText)),
+                      style: context.labelMedium
+                          .copyWith(color: context.themeColors.footerText)),
                 ],
               ),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    icon: Icon(Icons.code, color: AppColors.footerText),
+                    icon: Icon(Icons.code, color: context.themeColors.footerText),
                     onPressed: () => _launch(
                         'https://github.com/Anshul-3107/Leaf-Compass'),
                   ),
                   IconButton(
                     icon:
-                        Icon(Icons.mail_outline, color: AppColors.footerText),
+                        Icon(Icons.mail_outline, color: context.themeColors.footerText),
                     onPressed: () =>
                         _launch('mailto:anshularohi31072004@gmail.com'),
                   ),
                   IconButton(
                     icon: Icon(Icons.phone_outlined,
-                        color: AppColors.footerText),
+                        color: context.themeColors.footerText),
                     onPressed: () => _launch('tel:+917007535723'),
                   ),
                 ],
@@ -789,19 +837,19 @@ class _FooterSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          Divider(color: AppColors.footerText.withValues(alpha: 0.3)),
+          Divider(color: context.themeColors.footerText.withValues(alpha: 0.3)),
           const SizedBox(height: AppSpacing.sm),
           Wrap(
             alignment: WrapAlignment.center,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text('Made with ',
-                  style: AppTypography.labelMedium
-                      .copyWith(color: AppColors.footerText)),
-              const Icon(Icons.favorite, color: AppColors.error, size: 14),
+                  style: context.labelMedium
+                      .copyWith(color: context.themeColors.footerText)),
+              Icon(Icons.favorite, color: context.themeColors.error, size: 14),
               Text(' for farmers. © ${DateTime.now().year} | Anshul Arohi',
-                  style: AppTypography.labelMedium
-                      .copyWith(color: AppColors.footerText)),
+                  style: context.labelMedium
+                      .copyWith(color: context.themeColors.footerText)),
             ],
           ),
         ],

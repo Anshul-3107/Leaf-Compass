@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors_extension.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../theme/app_colors.dart';
+
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
@@ -34,7 +35,7 @@ class ChatBubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           // Bot avatar
-          if (!isUser && showAvatar) _botAvatar(),
+          if (!isUser && showAvatar) _botAvatar(context),
           if (!isUser && showAvatar) const SizedBox(width: AppSpacing.sm),
           if (!isUser && !showAvatar) const SizedBox(width: 4),
 
@@ -45,7 +46,7 @@ class ChatBubble extends StatelessWidget {
               padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.lg, vertical: AppSpacing.md),
               decoration: BoxDecoration(
-                color: isUser ? AppColors.primary : AppColors.surfaceContainer,
+                color: isUser ? context.themeColors.primary : context.themeColors.surfaceContainer,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(AppSpacing.radiusXl),
                   topRight: const Radius.circular(AppSpacing.radiusXl),
@@ -54,7 +55,7 @@ class ChatBubble extends StatelessWidget {
                 ),
                 border: isUser
                     ? null
-                    : Border.all(color: AppColors.surfaceDim),
+                    : Border.all(color: context.themeColors.surfaceDim),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.05),
@@ -65,8 +66,8 @@ class ChatBubble extends StatelessWidget {
               ),
               child: Text(
                 text,
-                style: AppTypography.bodyMedium.copyWith(
-                  color: isUser ? Colors.white : AppColors.onSurface,
+                style: context.bodyMedium.copyWith(
+                  color: isUser ? Colors.white : context.themeColors.onSurface,
                 ),
               ),
             ),
@@ -74,7 +75,7 @@ class ChatBubble extends StatelessWidget {
 
           // User avatar
           if (isUser && showAvatar) const SizedBox(width: AppSpacing.sm),
-          if (isUser && showAvatar) _userAvatar(),
+          if (isUser && showAvatar) _userAvatar(context),
           if (isUser && !showAvatar) const SizedBox(width: 4),
         ],
       ),
@@ -83,27 +84,27 @@ class ChatBubble extends StatelessWidget {
         .slideY(begin: 0.04, end: 0, duration: 200.ms);
   }
 
-  Widget _botAvatar() {
+  Widget _botAvatar(BuildContext context) {
     return Container(
       width: 32,
       height: 32,
       decoration: BoxDecoration(
-        color: AppColors.primaryContainer,
+        color: context.themeColors.primaryContainer,
         shape: BoxShape.circle,
       ),
-      child: const Icon(Icons.smart_toy, size: 18, color: AppColors.primary),
+      child: Icon(Icons.smart_toy, size: 18, color: context.themeColors.primary),
     );
   }
 
-  Widget _userAvatar() {
+  Widget _userAvatar(BuildContext context) {
     return Container(
       width: 32,
       height: 32,
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerHigh,
+        color: context.themeColors.surfaceContainerHigh,
         shape: BoxShape.circle,
       ),
-      child: const Icon(Icons.person, size: 18, color: AppColors.onSurfaceVariant),
+      child: Icon(Icons.person, size: 18, color: context.themeColors.onSurfaceVariant),
     );
   }
 }
@@ -124,20 +125,20 @@ class ChatTypingIndicator extends StatelessWidget {
               width: 32,
               height: 32,
               margin: const EdgeInsets.only(right: AppSpacing.sm),
-              decoration: const BoxDecoration(
-                color: AppColors.primaryContainer,
+              decoration: BoxDecoration(
+                color: context.themeColors.primaryContainer,
                 shape: BoxShape.circle,
               ),
               child:
-                  const Icon(Icons.smart_toy, size: 18, color: AppColors.primary),
+                  Icon(Icons.smart_toy, size: 18, color: context.themeColors.primary),
             ),
           Container(
             padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.lg, vertical: AppSpacing.md),
             decoration: BoxDecoration(
-              color: AppColors.surfaceContainer,
+              color: context.themeColors.surfaceContainer,
               borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-              border: Border.all(color: AppColors.surfaceDim),
+              border: Border.all(color: context.themeColors.surfaceDim),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.05),
@@ -157,7 +158,7 @@ class ChatTypingIndicator extends StatelessWidget {
                       width: 8,
                       height: 8,
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.5),
+                        color: context.themeColors.primary.withValues(alpha: 0.5),
                         shape: BoxShape.circle,
                       ),
                     )
@@ -172,8 +173,8 @@ class ChatTypingIndicator extends StatelessWidget {
                 }),
                 const SizedBox(width: AppSpacing.sm),
                 Text('Thinking...',
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.onSurfaceMuted,
+                    style: context.bodySmall.copyWith(
+                      color: context.themeColors.onSurfaceMuted,
                     )),
               ],
             ),

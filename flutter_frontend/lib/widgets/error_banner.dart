@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors_extension.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../theme/app_colors.dart';
+
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
@@ -17,10 +18,10 @@ class ErrorBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: AppColors.errorContainer,
+        color: context.themeColors.errorContainer,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
-          color: AppColors.error.withValues(alpha: 0.3),
+          color: context.themeColors.error.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
@@ -28,18 +29,18 @@ class ErrorBanner extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(AppSpacing.sm),
             decoration: BoxDecoration(
-              color: AppColors.error.withValues(alpha: 0.12),
+              color: context.themeColors.error.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.error_outline,
-                color: AppColors.error, size: 20),
+            child: Icon(Icons.error_outline,
+                color: context.themeColors.error, size: 20),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Text(
               message,
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.error,
+              style: context.bodySmall.copyWith(
+                color: context.themeColors.error,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -47,7 +48,7 @@ class ErrorBanner extends StatelessWidget {
           if (onDismiss != null)
             IconButton(
               icon: Icon(Icons.close,
-                  size: 18, color: AppColors.error.withValues(alpha: 0.6)),
+                  size: 18, color: context.themeColors.error.withValues(alpha: 0.6)),
               onPressed: onDismiss,
               visualDensity: VisualDensity.compact,
             ),

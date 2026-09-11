@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors_extension.dart';
 import '../services/api_service.dart';
-import '../theme/app_colors.dart';
+
 import '../widgets/prediction_form.dart';
 
 /// Mirrors Yield.jsx
@@ -76,7 +77,7 @@ class YieldScreen extends StatelessWidget {
       headerTitle: 'Crop Yield Prediction',
       headerDescription:
           'Estimate your expected crop production based on weather, soil, and farming parameters.',
-      accentColor: AppColors.accentYield,
+      accentColor: context.themeColors.accentYield,
     );
   }
 }

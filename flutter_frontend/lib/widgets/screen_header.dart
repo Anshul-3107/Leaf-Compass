@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors_extension.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
@@ -11,14 +11,14 @@ class ScreenHeader extends StatelessWidget {
   final IconData icon;
   final String title;
   final String description;
-  final Color accentColor;
+  final Color? accentColor;
 
   const ScreenHeader({
     super.key,
     required this.icon,
     required this.title,
     required this.description,
-    this.accentColor = AppColors.primary,
+    this.accentColor,
   });
 
   @override
@@ -27,10 +27,10 @@ class ScreenHeader extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: AppSpacing.xxl),
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
-        color: accentColor.withValues(alpha: 0.06),
+        color: (accentColor ?? context.themeColors.primary).withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border(
-          left: BorderSide(color: accentColor, width: 4),
+          left: BorderSide(color: accentColor ?? context.themeColors.primary, width: 4),
         ),
       ),
       child: Row(
@@ -39,21 +39,21 @@ class ScreenHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: accentColor.withValues(alpha: 0.12),
+              color: (accentColor ?? context.themeColors.primary).withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             ),
-            child: Icon(icon, color: accentColor, size: 24),
+            child: Icon(icon, color: accentColor ?? context.themeColors.primary, size: 24),
           ),
           const SizedBox(width: AppSpacing.lg),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: AppTypography.titleLarge),
+                Text(title, style: context.titleLarge),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   description,
-                  style: AppTypography.bodySmall,
+                  style: context.bodySmall,
                 ),
               ],
             ),

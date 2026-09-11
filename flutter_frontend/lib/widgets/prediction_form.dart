@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors_extension.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:dio/dio.dart';
 
-import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import 'error_banner.dart';
@@ -41,7 +41,7 @@ class PredictionForm extends StatefulWidget {
   final IconData headerIcon;
   final String headerTitle;
   final String headerDescription;
-  final Color accentColor;
+  final Color? accentColor;
 
   const PredictionForm({
     super.key,
@@ -53,7 +53,7 @@ class PredictionForm extends StatefulWidget {
     this.headerIcon = Icons.analytics_outlined,
     this.headerTitle = '',
     this.headerDescription = '',
-    this.accentColor = AppColors.primary,
+    this.accentColor,
   });
 
   @override
@@ -138,7 +138,7 @@ class _PredictionFormState extends State<PredictionForm> {
                   icon: widget.headerIcon,
                   title: widget.headerTitle,
                   description: widget.headerDescription,
-                  accentColor: widget.accentColor,
+                  accentColor: widget.accentColor ?? context.themeColors.primary,
                 ),
 
               // ── Form fields ──
@@ -169,7 +169,7 @@ class _PredictionFormState extends State<PredictionForm> {
                 label: Text(_loading ? 'Calculating...' : 'Predict'),
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size.fromHeight(50),
-                  backgroundColor: widget.accentColor,
+                  backgroundColor: widget.accentColor ?? context.themeColors.primary,
                 ),
               ).animate().fadeIn(delay: 200.ms),
 
@@ -210,7 +210,7 @@ class _PredictionFormState extends State<PredictionForm> {
     return ResultCard(
       displayValue: displayValue,
       unit: widget.unit,
-      accentColor: widget.accentColor,
+      accentColor: widget.accentColor ?? context.themeColors.primary,
     );
   }
 
@@ -219,8 +219,8 @@ class _PredictionFormState extends State<PredictionForm> {
       return DropdownButtonFormField<String>(
         decoration: InputDecoration(labelText: field.label),
         hint: Text('Select ${field.label}',
-            style: AppTypography.bodySmall
-                .copyWith(color: AppColors.onSurfaceMuted)),
+            style: context.bodySmall
+                .copyWith(color: context.themeColors.onSurfaceMuted)),
         items: field.options!
             .map((opt) =>
                 DropdownMenuItem(value: opt, child: Text(opt)))

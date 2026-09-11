@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'theme/app_colors_extension.dart';
+import 'theme/theme_provider.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-import 'theme/app_colors.dart';
 import 'theme/app_spacing.dart';
 import 'theme/app_typography.dart';
 import 'theme/app_theme.dart';
@@ -39,11 +41,16 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
-      statusBarColor: AppColors.primary,
+      statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
     ),
   );
-  runApp(const LeafCompassApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: const LeafCompassApp(),
+    ),
+  );
 }
 
 // ── Root App ───────────────────────────────────────────────────────────────
@@ -52,11 +59,15 @@ class LeafCompassApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return MaterialApp.router(
       title: 'LeafCompass',
       debugShowCheckedModeBanner: false,
       routerConfig: _router,
       theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: themeProvider.themeMode,
     );
   }
 }
@@ -110,7 +121,7 @@ class _AppShellState extends State<_AppShell> {
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           border: Border(
-            top: BorderSide(color: AppColors.surfaceDim, width: 1),
+            top: BorderSide(color: context.themeColors.surfaceDim, width: 1),
           ),
         ),
         child: NavigationBar(
@@ -121,7 +132,7 @@ class _AppShellState extends State<_AppShell> {
           destinations: _navItems.map((item) {
             return NavigationDestination(
               icon: Icon(item.icon),
-              selectedIcon: Icon(item.active, color: AppColors.primary),
+              selectedIcon: Icon(item.active, color: context.themeColors.primary),
               label: item.label,
             );
           }).toList(),
@@ -198,9 +209,9 @@ class _FloatingChatbotState extends State<_FloatingChatbot> {
               height: 400,
               margin: const EdgeInsets.only(bottom: 10),
               decoration: BoxDecoration(
-                color: AppColors.surfaceContainer,
+                color: context.themeColors.surfaceContainer,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-                border: Border.all(color: AppColors.surfaceDim),
+                border: Border.all(color: context.themeColors.surfaceDim),
                 boxShadow: [
                   BoxShadow(
                       color: Colors.black.withValues(alpha: 0.15),
@@ -216,7 +227,7 @@ class _FloatingChatbotState extends State<_FloatingChatbot> {
                         horizontal: AppSpacing.lg, vertical: AppSpacing.md),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [AppColors.primaryDark, AppColors.primary],
+                        colors: [context.themeColors.primaryDark, context.themeColors.primary],
                         begin: Alignment.centerLeft,
                         end: Alignment.centerRight,
                       ),
@@ -240,10 +251,10 @@ class _FloatingChatbotState extends State<_FloatingChatbot> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('AgroBot',
-                                  style: AppTypography.labelLarge
+                                  style: context.labelLarge
                                       .copyWith(color: Colors.white)),
                               Text('AI Farming Assistant',
-                                  style: AppTypography.labelSmall.copyWith(
+                                  style: context.labelSmall.copyWith(
                                       color: Colors.white.withValues(alpha: 0.7),
                                       letterSpacing: 0)),
                             ],
@@ -268,7 +279,7 @@ class _FloatingChatbotState extends State<_FloatingChatbot> {
                   // ── Messages ──
                   Expanded(
                     child: Container(
-                      color: AppColors.surface,
+                      color: context.themeColors.surface,
                       child: ListView.builder(
                         controller: _scroll,
                         padding: const EdgeInsets.all(AppSpacing.md),
@@ -294,11 +305,11 @@ class _FloatingChatbotState extends State<_FloatingChatbot> {
                   Container(
                     padding: const EdgeInsets.all(AppSpacing.sm),
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceContainer,
+                      color: context.themeColors.surfaceContainer,
                       borderRadius: const BorderRadius.vertical(
                           bottom: Radius.circular(AppSpacing.radiusXl)),
                       border: Border(
-                        top: BorderSide(color: AppColors.surfaceDim),
+                        top: BorderSide(color: context.themeColors.surfaceDim),
                       ),
                     ),
                     child: Row(
@@ -306,16 +317,16 @@ class _FloatingChatbotState extends State<_FloatingChatbot> {
                         Expanded(
                           child: TextField(
                             controller: _ctrl,
-                            style: AppTypography.bodySmall,
+                            style: context.bodySmall,
                             decoration: InputDecoration(
                               hintText: 'Ask about crops...',
-                              hintStyle: AppTypography.bodySmall.copyWith(
-                                  color: AppColors.onSurfaceMuted),
+                              hintStyle: context.bodySmall.copyWith(
+                                  color: context.themeColors.onSurfaceMuted),
                               contentPadding: const EdgeInsets.symmetric(
                                   horizontal: AppSpacing.md, vertical: AppSpacing.sm),
                               isDense: true,
                               filled: true,
-                              fillColor: AppColors.surfaceContainerHigh,
+                              fillColor: context.themeColors.surfaceContainerHigh,
                               border: OutlineInputBorder(
                                   borderRadius:
                                       BorderRadius.circular(AppSpacing.radiusFull),
@@ -327,15 +338,15 @@ class _FloatingChatbotState extends State<_FloatingChatbot> {
                               focusedBorder: OutlineInputBorder(
                                   borderRadius:
                                       BorderRadius.circular(AppSpacing.radiusFull),
-                                  borderSide: const BorderSide(
-                                      color: AppColors.primary, width: 1.5)),
+                                  borderSide: BorderSide(
+                                      color: context.themeColors.primary, width: 1.5)),
                             ),
                             onSubmitted: (_) => _send(),
                           ),
                         ),
                         const SizedBox(width: AppSpacing.sm),
                         Material(
-                          color: AppColors.primary,
+                          color: context.themeColors.primary,
                           shape: const CircleBorder(),
                           child: InkWell(
                             customBorder: const CircleBorder(),
@@ -359,10 +370,10 @@ class _FloatingChatbotState extends State<_FloatingChatbot> {
 
           // ── FAB ──
           Material(
-            color: AppColors.secondary,
+            color: context.themeColors.secondary,
             shape: const CircleBorder(),
             elevation: 6,
-            shadowColor: AppColors.secondary.withValues(alpha: 0.4),
+            shadowColor: context.themeColors.secondary.withValues(alpha: 0.4),
             child: InkWell(
               customBorder: const CircleBorder(),
               onTap: widget.onToggle,

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors_extension.dart';
 
 import '../models/chat_message.dart';
 import '../services/api_service.dart';
-import '../theme/app_colors.dart';
+
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../widgets/chat_bubble.dart';
@@ -74,11 +75,11 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       // ── Header bar ──
       appBar: AppBar(
-        backgroundColor: AppColors.primary,
+        backgroundColor: context.themeColors.primary,
         flexibleSpace: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [AppColors.primaryDark, AppColors.primary],
+              colors: [context.themeColors.primaryDark, context.themeColors.primary],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),
@@ -100,10 +101,10 @@ class _ChatScreenState extends State<ChatScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('AgroBot AI',
-                    style: AppTypography.titleMedium
+                    style: context.titleMedium
                         .copyWith(color: Colors.white)),
                 Text('Powered by DeepSeek',
-                    style: AppTypography.labelSmall.copyWith(
+                    style: context.labelSmall.copyWith(
                         color: Colors.white.withValues(alpha: 0.7),
                         letterSpacing: 0)),
               ],
@@ -134,7 +135,7 @@ class _ChatScreenState extends State<ChatScreen> {
           // ── Messages area ──
           Expanded(
             child: Container(
-              color: AppColors.surface,
+              color: context.themeColors.surface,
               child: ListView.builder(
                 controller: _scrollCtrl,
                 padding: const EdgeInsets.symmetric(
@@ -162,9 +163,9 @@ class _ChatScreenState extends State<ChatScreen> {
             padding: const EdgeInsets.fromLTRB(
                 AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.lg),
             decoration: BoxDecoration(
-              color: AppColors.surfaceContainer,
+              color: context.themeColors.surfaceContainer,
               border: Border(
-                top: BorderSide(color: AppColors.surfaceDim),
+                top: BorderSide(color: context.themeColors.surfaceDim),
               ),
             ),
             child: SafeArea(
@@ -175,10 +176,10 @@ class _ChatScreenState extends State<ChatScreen> {
                       controller: _ctrl,
                       decoration: InputDecoration(
                         hintText: 'Ask about crops, diseases, or weather...',
-                        hintStyle: AppTypography.bodySmall
-                            .copyWith(color: AppColors.onSurfaceMuted),
+                        hintStyle: context.bodySmall
+                            .copyWith(color: context.themeColors.onSurfaceMuted),
                         filled: true,
-                        fillColor: AppColors.surfaceContainerHigh,
+                        fillColor: context.themeColors.surfaceContainerHigh,
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.lg,
                             vertical: AppSpacing.md),
@@ -195,8 +196,8 @@ class _ChatScreenState extends State<ChatScreen> {
                         focusedBorder: OutlineInputBorder(
                           borderRadius:
                               BorderRadius.circular(AppSpacing.radiusFull),
-                          borderSide: const BorderSide(
-                              color: AppColors.primary, width: 1.5),
+                          borderSide: BorderSide(
+                              color: context.themeColors.primary, width: 1.5),
                         ),
                       ),
                       minLines: 1,
@@ -208,11 +209,11 @@ class _ChatScreenState extends State<ChatScreen> {
                   const SizedBox(width: AppSpacing.sm),
                   Material(
                     color: _loading
-                        ? AppColors.surfaceDim
-                        : AppColors.primary,
+                        ? context.themeColors.surfaceDim
+                        : context.themeColors.primary,
                     shape: const CircleBorder(),
                     elevation: _loading ? 0 : 2,
-                    shadowColor: AppColors.primary.withValues(alpha: 0.3),
+                    shadowColor: context.themeColors.primary.withValues(alpha: 0.3),
                     child: InkWell(
                       customBorder: const CircleBorder(),
                       onTap: _loading ? null : _handleSend,

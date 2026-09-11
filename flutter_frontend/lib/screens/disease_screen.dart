@@ -1,10 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../theme/app_colors_extension.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../services/api_service.dart';
-import '../theme/app_colors.dart';
+
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../widgets/screen_header.dart';
@@ -74,17 +75,17 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // ── Screen Header ──
-            const ScreenHeader(
+            ScreenHeader(
               icon: Icons.biotech,
               title: 'Plant Disease Detection',
               description:
                   'Upload or capture a photo of a leaf to instantly identify diseases using AI-powered analysis.',
-              accentColor: AppColors.accentDisease,
+              accentColor: context.themeColors.accentDisease,
             ),
 
             // ── Image Upload Area ──
             Material(
-              color: AppColors.surfaceContainer,
+              color: context.themeColors.surfaceContainer,
               borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
               child: InkWell(
                 borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
@@ -96,8 +97,8 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
                     borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                     border: Border.all(
                       color: _image != null
-                          ? AppColors.primary
-                          : AppColors.surfaceDim,
+                          ? context.themeColors.primary
+                          : context.themeColors.surfaceDim,
                       width: _image != null ? 2 : 1,
                     ),
                   ),
@@ -139,18 +140,18 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
                               padding:
                                   const EdgeInsets.all(AppSpacing.lg),
                               decoration: BoxDecoration(
-                                color: AppColors.accentDiseaseLight,
+                                color: context.themeColors.accentDiseaseLight,
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(Icons.cloud_upload_outlined,
-                                  size: 36, color: AppColors.accentDisease),
+                                  size: 36, color: context.themeColors.accentDisease),
                             ),
                             const SizedBox(height: AppSpacing.md),
                             Text('Tap to upload a leaf photo',
-                                style: AppTypography.bodyMedium),
+                                style: context.bodyMedium),
                             const SizedBox(height: AppSpacing.xs),
                             Text('Gallery or Camera',
-                                style: AppTypography.labelMedium),
+                                style: context.labelMedium),
                           ],
                         ),
                 ),
@@ -172,7 +173,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
               label: Text(_loading ? 'Scanning...' : 'Analyze Plant'),
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size.fromHeight(50),
-                backgroundColor: AppColors.accentDisease,
+                backgroundColor: context.themeColors.accentDisease,
               ),
             ).animate().fadeIn(delay: 200.ms),
 
@@ -192,7 +193,7 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
                 label: 'ANALYSIS RESULT',
                 displayValue: _result!['class'] as String? ?? 'Unknown',
                 confidence: _result!['confidence'] as double? ?? 0.0,
-                accentColor: AppColors.accentDisease,
+                accentColor: context.themeColors.accentDisease,
               ),
             ],
           ],
@@ -214,11 +215,11 @@ class _DiseaseScreenState extends State<DiseaseScreen> {
               height: 4,
               margin: const EdgeInsets.only(bottom: AppSpacing.lg),
               decoration: BoxDecoration(
-                color: AppColors.surfaceDim,
+                color: context.themeColors.surfaceDim,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            Text('Choose Image Source', style: AppTypography.titleMedium),
+            Text('Choose Image Source', style: context.titleMedium),
             const SizedBox(height: AppSpacing.xl),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -259,7 +260,7 @@ class _SourceOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.primaryContainer,
+      color: context.themeColors.primaryContainer,
       borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
@@ -270,9 +271,9 @@ class _SourceOption extends StatelessWidget {
               vertical: AppSpacing.lg, horizontal: AppSpacing.sm),
           child: Column(
             children: [
-              Icon(icon, color: AppColors.primary, size: 30),
+              Icon(icon, color: context.themeColors.primary, size: 30),
               const SizedBox(height: AppSpacing.sm),
-              Text(label, style: AppTypography.labelLarge),
+              Text(label, style: context.labelLarge),
             ],
           ),
         ),
