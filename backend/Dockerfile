@@ -14,6 +14,24 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application
 COPY . .
 
+# 3. Bake real model weights into the Docker image at build time from Hugging Face storage
+RUN python -c "\
+import urllib.request, os; \
+models = [ \
+    'crop_recommendation_model.pkl', \
+    'fertilizer_recommendation_model.pkl', \
+    'plant_disease_prediction_model.pt', \
+    'yield_prediction_model.pkl' \
+]; \
+os.makedirs('models', exist_ok=True); \
+for m in models: \
+    url = f'https://huggingface.co/spaces/anshularohi/leaf-compass-api/resolve/main/models/{m}'; \
+    dest = f'models/{m}'; \
+    if not (os.path.exists(dest) and os.path.getsize(dest) > 10240): \
+        print(f'Baking model {m} into image...'); \
+        urllib.request.urlretrieve(url, dest); \
+        print(f'Done {m}: {os.path.getsize(dest)} bytes')"
+
 # Create a non-root user and grant permissions to /app
 RUN useradd -m -u 1000 user && chown -R user:user /app
 USER user
